@@ -27,11 +27,14 @@ end
     x
 end
 
-@inline function Base.setindex!(x::Node, ::UndefInitializer, i::Int)
+@inline function Base.setindex!(x::Node, ::Nothing, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds begin
-        # x.data[i] = Ref{eltype(x)}()
-        x.mask[i] = false
+        if x.mask[i]
+            x.mask[i] = false
+            child = x.data[i]
+            link!(find_last_activechild(x, i), find_first_activechild(x, i))
+        end
     end
     x
 end
