@@ -22,6 +22,7 @@ end
     @inbounds begin
         x.data[i] = Ref(v)
         x.mask[i] = true
+        link_child!(x, i)
     end
     x
 end
@@ -39,9 +40,11 @@ function allocate!(x::Node{T}, i::Int) where {T}
     @boundscheck checkbounds(x, i)
     @inbounds begin
         isactive(x, i) && return x # TODO: check really allocated?
+        if !isassigned(x.data[i])
+            x.data[i] = Ref(T())
+        end
         x.mask[i] = true # make it active
-        isassigned(x.data[i]) && return x
-        x.data[i] = Ref(T())
+        link_child!(x, i)
     end
     x
 end
@@ -108,13 +111,6 @@ function link_child!(x::Node, i::Int)
         link_child_prev!(x, i)
         link_child_next!(x, i)
     end
-    x
-end
-
-function add_child!(x::Node, i::Int)
-    @boundscheck checkbounds(x, i)
-    allocate!(x, i)
-    link_child!(x, i)
     x
 end
 
