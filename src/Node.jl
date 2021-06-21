@@ -79,13 +79,17 @@ function find_first_activechild(x::Node, i::Int)
     end
 end
 
+link!(x::T, y::T) where {T <: AbstractNode} = (set_next!(x, y); set_prev!(y, x); nothing)
+link!(x::AbstractNode, y::Nothing) = (set_next!(x, y); nothing)
+link!(x::Nothing, y::AbstractNode) = (set_prev!(y, x); nothing)
+link!(x::Nothing, y::Nothing) = nothing
+
 function link_child_prev!(x::Node, i::Int)
     @boundscheck checkmask(x, i)
     child = @inbounds x[i]
     prev = find_last_activechild(x, i)
     if prev !== nothing
-        set_prev!(child, prev)
-        set_next!(prev, child)
+        link!(prev, child)
         true
     else
         false
@@ -97,8 +101,7 @@ function link_child_next!(x::Node, i::Int)
     child = @inbounds x[i]
     next = find_first_activechild(x, i)
     if next !== nothing
-        set_next!(child, next)
-        set_prev!(next, child)
+        link!(child, next)
         true
     else
         false
