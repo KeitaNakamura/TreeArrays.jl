@@ -59,6 +59,7 @@ function allocate!(x::Node{T}, i::Int) where {T}
             child = T()
         else
             child = x.data[i][] # set itself
+            fill!(child.mask, false)
         end
         x[i] = child
     end
