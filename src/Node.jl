@@ -44,10 +44,11 @@ function allocate!(x::Node{T}, i::Int) where {T}
     @inbounds begin
         isactive(x, i) && return x # TODO: check really allocated?
         if !isassigned(x.data[i])
-            x.data[i] = Ref(T())
+            child = T()
+        else
+            child = x.data[i][] # set itself
         end
-        x.mask[i] = true # make it active
-        link_child!(x, i)
+        x[i] = child
     end
     x
 end
