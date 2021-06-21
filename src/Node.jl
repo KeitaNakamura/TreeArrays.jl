@@ -37,7 +37,7 @@ end
     x
 end
 
-function free!(x::Node, i::Int...)
+function free!(x::Node, i...)
     @boundscheck checkbounds(x, i...)
     @inbounds begin
         if isactive(x, i...)
@@ -50,7 +50,7 @@ function free!(x::Node, i::Int...)
     end
 end
 
-function allocate!(x::Node{T}, i::Int...) where {T}
+function allocate!(x::Node{T}, i...) where {T}
     @boundscheck checkbounds(x, i...)
     @inbounds begin
         isactive(x, i...) && return x # TODO: check really allocated?

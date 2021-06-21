@@ -37,6 +37,6 @@ end
     x
 end
 
-allocate!(x::Leaf, i::Int...) = x
+allocate!(x::Leaf, i...) = x
 
 cleanup!(x::Leaf) = x

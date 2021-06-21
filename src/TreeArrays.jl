@@ -6,12 +6,14 @@ using StaticArrays
 
 export
     Powers,
-    TreeIndex,
+    TreeLinearIndex,
+    TreeCartesianIndex,
     Leaf,
     Node,
     TreeArray
 
 include("AbstractNode.jl")
+include("TreeIndex.jl")
 include("Leaf.jl")
 include("Node.jl")
 include("TreeArray.jl")

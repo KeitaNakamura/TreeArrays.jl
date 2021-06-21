@@ -21,15 +21,18 @@ function Base.isassigned(x::TreeArray, i::Int...)
     true
 end
 
+TreeLinearIndex(x::TreeArray{<: Any, N}, I::Vararg{Int, N}) where {N} = TreeLinearIndex(Powers(x.node), I...)
+TreeCartesianIndex(x::TreeArray{<: Any, N}, I::Vararg{Int, N}) where {N} = TreeCartesianIndex(Powers(x.node), I...)
+
 function Base.getindex(x::TreeArray{<: Any, N}, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(x, I...)
-    index = TreeIndex(Powers(x.node), I...)
+    index = TreeLinearIndex(x, I...)
     @inbounds x[index]
 end
 
 function Base.setindex!(x::TreeArray{<: Any, N}, v, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(x, I...)
-    index = TreeIndex(Powers(x.node), I...)
+    index = TreeLinearIndex(x, I...)
     @inbounds x[index] = v
 end
 
