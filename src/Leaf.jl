@@ -1,11 +1,11 @@
 struct Leaf{T, L} <: AbstractNode{T, L}
     data::MVector{L, T}
     mask::BitVector
-    prev::Base.RefValue{Leaf{T, L}}
-    next::Base.RefValue{Leaf{T, L}}
+    prev::Pointer{Leaf{T, L}}
+    next::Pointer{Leaf{T, L}}
 end
 
-Leaf{T, L}(; prev = Ref{Leaf{T, L}}(), next = Ref{Leaf{T, L}}()) where {T, L} =
+Leaf{T, L}(; prev = Pointer{Leaf{T, L}}(nothing), next = Pointer{Leaf{T, L}}(nothing)) where {T, L} =
     Leaf(zero(MVector{L, T}), falses(L), prev, next)
 
 childtype(x::Type{<: Leaf}) = nothing

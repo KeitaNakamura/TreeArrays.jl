@@ -18,3 +18,5 @@ Base.isassigned(x::AbstractNode, i::Int...) = (@_propagate_inbounds_meta; x.mask
 
 checkmask(::Type{Bool}, x::AbstractNode, i) = isactive(x, i) # checkbounds as well
 checkmask(x::AbstractNode, i) = checkmask(Bool, x, i) ? nothing : error("access to unactivated element")
+
+const Pointer{T <: AbstractNode} = Ref{Union{T, Nothing}}

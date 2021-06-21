@@ -1,11 +1,11 @@
 struct Node{T <: AbstractNode, L} <: AbstractNode{T, L}
     data::Vector{Base.RefValue{T}}
     mask::BitVector
-    prev::Base.RefValue{Node{T, L}}
-    next::Base.RefValue{Node{T, L}}
+    prev::Pointer{Node{T, L}}
+    next::Pointer{Node{T, L}}
 end
 
-Node{T, L}(; prev = Ref{Node{T, L}}(), next = Ref{Node{T, L}}()) where {T, L} =
+Node{T, L}(; prev = Pointer{Node{T, L}}(nothing), next = Pointer{Node{T, L}}(nothing)) where {T, L} =
     Node([Ref(T()) for i in 1:L], falses(L), prev, next)
 
 childtype(::Type{<: Node{T}}) where {T} = T
