@@ -32,11 +32,23 @@ end
     @inbounds begin
         if x.mask[i]
             x.mask[i] = false
-            child = x.data[i]
             link!(find_last_activechild(x, i), find_first_activechild(x, i))
         end
     end
     x
+end
+
+function free!(x::Node, i::Int)
+    @boundscheck checkbounds(x, i)
+    @inbounds begin
+        if isactive(x, i)
+            x[i] = nothing
+        end
+        if isassigned(x.data[i])
+            x.data[i] = Ref{eltype(x)}()
+        end
+        x
+    end
 end
 
 function allocate!(x::Node{T}, i::Int) where {T}
@@ -126,14 +138,9 @@ function cleanup!(x::Node)
         if isactive(x, i)
             child = x[i]
             cleanup!(child)
-            if !anyactive(child)
-                x.data[i] = Ref{eltype(x)}()
-                x.mask[i] = false
-            end
+            !anyactive(child) && free!(x, i)
         else
-            if isassigned(x.data[i])
-                x.data[i] = Ref{eltype(x)}()
-            end
+            free!(x, i)
         end
     end
     x
