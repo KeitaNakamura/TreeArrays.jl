@@ -1,19 +1,25 @@
-struct Leaf{T, L} <: AbstractNode{T, L}
-    data::MVector{L, T}
-    mask::BitVector
-    prev::Pointer{Leaf{T, L}}
-    next::Pointer{Leaf{T, L}}
+struct Leaf{T, N, pow} <: AbstractNode{T, N, pow}
+    data::Array{T, N}
+    mask::BitArray{N}
 end
 
-Leaf{T, L}(; prev = Pointer{Leaf{T, L}}(nothing), next = Pointer{Leaf{T, L}}(nothing)) where {T, L} =
-    Leaf(zero(MVector{L, T}), falses(L), prev, next)
+function Leaf{T, N, pow}() where {T, N, pow}
+    @assert isbitstype(T)
+    dims = size(Leaf{T, N, pow})
+    Leaf{T, N, pow}(Array{T}(undef, dims), falses(dims))
+end
 
-childtype(x::Type{<: Leaf}) = nothing
-childtype(x::Leaf) = nothing
+@pure childtype(::Type{<: Leaf}) = nothing
+@pure leafeltype(::Type{<: Leaf{T}}) where {T} = T
+
+Base.IndexStyle(::Type{<: Leaf}) = IndexLinear()
 
 @inline function Base.getindex(x::Leaf, i::Int)
-    @boundscheck checkmask(x, i)
-    @inbounds x.data[i]
+    @boundscheck checkbounds(x, i)
+    @inbounds begin
+        checkmask(x, i)
+        x.data[i]
+    end
 end
 
 @inline function Base.setindex!(x::Leaf, v, i::Int)
@@ -30,5 +36,7 @@ end
     @inbounds x.mask[i] = false
     x
 end
+
+allocate!(x::Leaf, i::Int...) = x
 
 cleanup!(x::Leaf) = x
