@@ -46,31 +46,40 @@ function allocate!(x::Node{T}, i::Int) where {T}
     x
 end
 
+find_last_activechild(::Nothing) = nothing
 function find_last_activechild(x::Node)
     i = findlast(==(true), x.mask)
     i === nothing && return find_last_activechild(get_prev(x))
     @inbounds x[i]
 end
-find_last_activechild(::Nothing) = nothing
+function find_last_activechild(x::Node, i::Int)
+    p = findprev(x.mask, i-1)
+    if p !== nothing
+        @inbounds x[p]
+    else
+        find_last_activechild(get_prev(x))
+    end
+end
 
+find_first_activechild(::Nothing) = nothing
 function find_first_activechild(x::Node)
     i = findfirst(==(true), x.mask)
     i === nothing && return find_first_activechild(get_next(x))
     @inbounds x[i]
 end
-find_first_activechild(::Nothing) = nothing
+function find_first_activechild(x::Node, i::Int)
+    n = findnext(x.mask, i+1)
+    if n !== nothing
+        @inbounds x[n]
+    else
+        find_first_activechild(get_next(x))
+    end
+end
 
 function link_child_prev!(x::Node, i::Int)
     @boundscheck checkmask(x, i)
-
-    p = findprev(x.mask, i-1)
-    if p !== nothing
-        prev = @inbounds x[p]
-    else
-        prev = find_last_activechild(get_prev(x))
-    end
-
     child = @inbounds x[i]
+    prev = find_last_activechild(x, i)
     if prev !== nothing
         set_prev!(child, prev)
         set_next!(prev, child)
@@ -82,15 +91,8 @@ end
 
 function link_child_next!(x::Node, i::Int)
     @boundscheck checkmask(x, i)
-
-    n = findnext(x.mask, i+1)
-    if n !== nothing
-        next = @inbounds x[n]
-    else
-        next = find_first_activechild(get_next(x))
-    end
-
     child = @inbounds x[i]
+    next = find_first_activechild(x, i)
     if next !== nothing
         set_next!(child, next)
         set_prev!(next, child)
