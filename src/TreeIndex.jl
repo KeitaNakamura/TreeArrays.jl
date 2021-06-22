@@ -1,5 +1,19 @@
 abstract type TreeIndex{depth} end
 
+@generated function TreeIndex(IndexType, compute_index, ::Powers{p}, i::Int...) where {p}
+    pows = p
+    exps = Expr[]
+    for _ in 1:length(pows)
+        push!(exps, :(compute_index(Powers($pows), i...)))
+        pows = Base.tail(pows)
+    end
+    quote
+        @_inline_meta
+        IndexType(tuple($(exps...)))
+    end
+end
+
+
 struct TreeLinearIndex{depth} <: TreeIndex{depth}
     I::NTuple{depth, Int}
 end
@@ -20,9 +34,7 @@ Base.getindex(index::TreeLinearIndex, i::Int) = (@_propagate_inbounds_meta; inde
     end
 end
 
-compute_treelinearindex(P::Powers, i::Int...) = (compute_linear(P, i...), compute_treelinearindex(Base.tail(P), i...)...)
-compute_treelinearindex(P::Powers{()}, i::Int...) = ()
-TreeLinearIndex(P::Powers, i::Int...) = TreeLinearIndex(compute_treelinearindex(P, i...))
+@inline TreeLinearIndex(P::Powers, i::Int...) = TreeIndex(TreeLinearIndex, compute_linear, P, i...)
 
 
 struct TreeCartesianIndex{depth, N} <: TreeIndex{depth}
@@ -45,6 +57,4 @@ Base.getindex(index::TreeCartesianIndex, i::Int) = (@_propagate_inbounds_meta; i
     end
 end
 
-compute_treecartesianindex(P::Powers, i::Int...) = (compute_cartesian(P, i...), compute_treecartesianindex(Base.tail(P), i...)...)
-compute_treecartesianindex(P::Powers{()}, i::Int...) = ()
-TreeCartesianIndex(P::Powers, i::Int...) = TreeCartesianIndex(compute_treecartesianindex(P, i...))
+@inline TreeCartesianIndex(P::Powers, i::Int...) = TreeIndex(TreeCartesianIndex, compute_cartesian, P, i...)
