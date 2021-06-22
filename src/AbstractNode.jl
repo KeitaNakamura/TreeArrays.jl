@@ -18,6 +18,11 @@ Base.isassigned(x::AbstractNode, i::Int...) = x.mask[i...]
 checkmask(::Type{Bool}, x::AbstractNode, i...) = (@_propagate_inbounds_meta; isactive(x, i...)) # checkbounds as well
 checkmask(x::AbstractNode, i...) = (@_propagate_inbounds_meta; checkmask(Bool, x, i...) ? nothing : error("access to unactivated element"))
 
+@inline function Base.getindex(x::AbstractNode, i::Int...)
+    @boundscheck checkbounds(x, i...)
+    @inbounds x[sub2ind(x, i...)]
+end
+
 
 struct Powers{pows}
     function Powers{pows}() where {pows}
