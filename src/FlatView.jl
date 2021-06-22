@@ -4,6 +4,7 @@ struct FlatView{T, N, pow, Tnode} <: AbstractArray{T, N}
 end
 
 Base.size(x::FlatView{<: Any, <: Any, pow}) where {pow} = .<<(size(x.blocks), pow)
+Base.parent(x::FlatView) = x.parent
 
 function Base.isassigned(x::FlatView, i::Int...)
     try
@@ -22,6 +23,22 @@ end
         block = x.blocks[blockindex...]
         block[localindex...]
     end
+end
+
+@inline function Base.setindex!(x::FlatView{<: Any, N, pow}, v, I::Vararg{Int, N}) where {N, pow}
+    @boundscheck checkbounds(x, I...)
+    blockindex = @. (I-1) >> pow + 1
+    localindex = @. I - (blockindex-1) << pow
+    @inbounds begin
+        if isassigned(x.blocks, blockindex...)
+            block = x.blocks[blockindex...]
+            block[localindex...] = v
+        else
+            leaf = _setindex!_getleaf(TreeArray(parent(x)), v, I...)
+            x.blocks[blockindex...] = leaf
+        end
+    end
+    x
 end
 
 @generated function FlatView(node::AbstractNode{<: Any, N}) where {pows, N}

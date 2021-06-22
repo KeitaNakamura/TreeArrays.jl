@@ -58,7 +58,20 @@ end
     end
 end
 
-@generated function Base.setindex!(x::TreeArray, v, I::TreeIndex{depth}) where {depth}
+@inline function Base.setindex!(x::TreeArray, v, I::TreeIndex)
+    _setindex!_getleaf(x, v, I)
+    x
+end
+
+
+# used in FlatView
+@inline function _setindex!_getleaf(x::TreeArray{<: Any, N}, v, I::Vararg{Int, N}) where {N}
+    @boundscheck checkbounds(x, I...)
+    index = TreeLinearIndex(x, I...)
+    @inbounds _setindex!_getleaf(x, v, index)
+end
+
+@generated function _setindex!_getleaf(x::TreeArray, v, I::TreeIndex{depth}) where {depth}
     exps = map(1:depth) do i
         quote
             index = I[$i]
@@ -71,5 +84,6 @@ end
         @_propagate_inbounds_meta
         node = x.node
         $(exps...)
+        node
     end
 end
