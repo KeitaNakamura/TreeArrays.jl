@@ -48,3 +48,10 @@ _divrem_pow(ind::Int, p::Int) = (d = ind >> p; (d, ind - (d << p)))
     indnext, r = _divrem_pow(ind, p)
     (r + 1, _ind2sub_recurse(Val(N-1), p, indnext)...)
 end
+
+@inline sub2ind(node::AbstractNode{<: Any, N, p}, inds::Int...) where {N, p} = _sub2ind_recurse(Val(N), p, 1, 1, inds...)
+_sub2ind_recurse(::Val{0}, p, L, ind) = ind
+function _sub2ind_recurse(::Val{N}, p, L, ind, i::Integer, I::Integer...) where {N}
+    @_inline_meta
+    _sub2ind_recurse(Val(N-1), p, L << p, ind+(i-1)*L, I...)
+end
