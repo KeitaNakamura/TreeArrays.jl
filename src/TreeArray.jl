@@ -3,8 +3,14 @@ struct TreeArray{T, N, NT <: AbstractNode{<: Any, N}} <: AbstractArray{T, N}
     dims::NTuple{N, Int}
 end
 
+function TreeArray(node::AbstractNode{<: Any, N}) where {N}
+    n = 1 << sum(Powers(node))
+    T = leafeltype(node)
+    TreeArray{T, N, typeof(node)}(node, ntuple(d -> n, Val(N)))
+end
+
 function TreeArray(node::AbstractNode, dims::NTuple{N, Int}) where {N}
-    maxlen = prod(.<<(1, Tuple(Powers(node))))
+    maxlen = 1 << sum(Powers(node))
     @assert all(≤(maxlen), dims)
     T = leafeltype(node)
     TreeArray{T, N, typeof(node)}(node, dims)
