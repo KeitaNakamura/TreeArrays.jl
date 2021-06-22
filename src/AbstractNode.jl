@@ -37,3 +37,14 @@ Powers(x::AbstractNode) = Powers(typeof(x))
 @pure Base.sum(::Powers{()}) = 0
 
 @pure Base.tail(::Powers{p}) where {p} = Powers(Base.tail(p))
+
+
+# divrem(ind, 1 << p)
+_divrem_pow(ind::Int, p::Int) = (d = ind >> p; (d, ind - (d << p)))
+
+@inline ind2sub(node::AbstractNode{<: Any, N, p}, ind::Int) where {N, p} = _ind2sub_recurse(Val(N), p, ind-1)
+@inline _ind2sub_recurse(::Val{1}, p::Int, ind::Int) = ind + 1
+@inline function _ind2sub_recurse(::Val{N}, p::Int, ind::Int) where {N}
+    indnext, r = _divrem_pow(ind, p)
+    (r + 1, _ind2sub_recurse(Val(N-1), p, indnext)...)
+end
