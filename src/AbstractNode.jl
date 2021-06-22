@@ -7,6 +7,7 @@ Base.length(x::AbstractNode) = length(typeof(x))
 Base.size(x::AbstractNode) = size(typeof(x))
 
 childtype(x::AbstractNode) = childtype(typeof(x))
+leaftype(x::AbstractNode) = leaftype(typeof(x))
 leafeltype(x::AbstractNode) = leafeltype(typeof(x))
 
 isactive(x::AbstractNode, i...) = (@_propagate_inbounds_meta; x.mask[i...])
@@ -30,6 +31,7 @@ struct Powers{pows}
     end
 end
 @pure Powers(p::Tuple{Vararg{Int}}) = Powers{p}()
+@pure Powers(p::Int...) = Powers{p}()
 
 @pure Base.Tuple(::Powers{pows}) where {pows} = pows
 @pure Base.getindex(P::Powers, i::Int) = Tuple(P)[i]

@@ -9,6 +9,7 @@ function Node{T, N, pow}() where {T, N, pow}
 end
 
 @pure childtype(::Type{<: Node{T}}) where {T} = T
+@pure leaftype(::Type{<: Node{T}}) where {T} = leaftype(T)
 @pure leafeltype(::Type{<: Node{T}}) where {T} = leafeltype(T)
 
 Base.IndexStyle(::Type{<: Node}) = IndexLinear()

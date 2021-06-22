@@ -10,12 +10,14 @@ export
     TreeCartesianIndex,
     Leaf,
     Node,
-    TreeArray
+    TreeArray,
+    FlatView
 
 include("AbstractNode.jl")
 include("TreeIndex.jl")
 include("Leaf.jl")
 include("Node.jl")
 include("TreeArray.jl")
+include("FlatView.jl")
 
 end # module

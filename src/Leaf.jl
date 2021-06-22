@@ -10,6 +10,7 @@ function Leaf{T, N, pow}() where {T, N, pow}
 end
 
 @pure childtype(::Type{<: Leaf}) = nothing
+@pure leaftype(T::Type{<: Leaf}) = T
 @pure leafeltype(::Type{<: Leaf{T}}) where {T} = T
 
 Base.IndexStyle(::Type{<: Leaf}) = IndexLinear()
