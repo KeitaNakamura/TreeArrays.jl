@@ -29,6 +29,11 @@ checkmask(x::AbstractNode, i...) = (@_propagate_inbounds_meta; checkmask(Bool, x
     @inbounds x[sub2ind(x, i...)]
 end
 
+@inline function Base.setindex!(x::AbstractNode, v, i::Int...)
+    @boundscheck checkbounds(x, i...)
+    @inbounds x[sub2ind(x, i...)] = v
+end
+
 const Pointer{T <: AbstractNode} = Ref{Union{T, Nothing}}
 
 
