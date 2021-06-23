@@ -6,15 +6,6 @@ end
 Base.size(x::FlatView{<: Any, <: Any, pow}) where {pow} = .<<(size(x.blocks), pow)
 Base.parent(x::FlatView) = x.parent
 
-function Base.isassigned(x::FlatView, i::Int...)
-    try
-        x[i...]
-    catch
-        return false
-    end
-    true
-end
-
 @inline function Base.getindex(x::FlatView{<: Any, N, pow}, I::Vararg{Int, N}) where {N, pow}
     @boundscheck checkbounds(x, I...)
     blockindex = @. (I-1) >> pow + 1

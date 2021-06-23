@@ -15,15 +15,13 @@ isactive(x::AbstractNode, i...) = (@_propagate_inbounds_meta; x.mask[i...])
 allactive(x::AbstractNode) = all(x.mask)
 anyactive(x::AbstractNode) = any(x.mask)
 
-Base.isassigned(x::AbstractNode, i::Int...) = x.mask[i...]
-
 get_prev(x::AbstractNode) = x.prev[]
 set_prev!(x::AbstractNode, v) = (x.prev[] = v; x)
 get_next(x::AbstractNode) = x.next[]
 set_next!(x::AbstractNode, v) = (x.next[] = v; x)
 
 checkmask(::Type{Bool}, x::AbstractNode, i...) = (@_propagate_inbounds_meta; isactive(x, i...)) # checkbounds as well
-checkmask(x::AbstractNode, i...) = (@_propagate_inbounds_meta; checkmask(Bool, x, i...) ? nothing : error("access to unactivated element"))
+checkmask(x::AbstractNode, i...) = (@_propagate_inbounds_meta; checkmask(Bool, x, i...) ? nothing : throw(UndefRefError()))
 
 @inline function Base.getindex(x::AbstractNode, i::Int...)
     @boundscheck checkbounds(x, i...)

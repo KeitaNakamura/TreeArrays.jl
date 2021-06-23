@@ -9,15 +9,6 @@ end
 
 Base.size(x::TreeView{<: Any, N}) where {N} = (n = 1 << sum(Powers(x.node)); ntuple(d -> n, Val(N)))
 
-function Base.isassigned(x::TreeView, i::Int...)
-    try
-        x[i...]
-    catch
-        return false
-    end
-    true
-end
-
 TreeLinearIndex(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N} = TreeLinearIndex(Powers(x.node), I...)
 TreeCartesianIndex(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N} = TreeCartesianIndex(Powers(x.node), I...)
 
