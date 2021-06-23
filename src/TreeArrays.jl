@@ -22,5 +22,6 @@ include("Node.jl")
 include("TreeView.jl")
 include("FlatView.jl")
 include("iterators.jl")
+include("show.jl")
 
 end # module
