@@ -37,7 +37,7 @@ end
     x
 end
 
-@inline function Base.setindex!(x::LeafNode, ::Nothing, i::Int)
+@inline function Base.setindex!(x::LeafNode, ::UndefInitializer, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds x.mask[i] = false
     x
