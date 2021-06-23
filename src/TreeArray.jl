@@ -58,6 +58,7 @@ end
 end
 
 @inline function Base.setindex!(x::TreeArray, v, I::TreeIndex)
+    @_propagate_inbounds_meta
     _setindex!_getleaf(x, v, I)
     x
 end
