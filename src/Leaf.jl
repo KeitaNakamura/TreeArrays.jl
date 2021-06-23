@@ -1,12 +1,17 @@
 struct Leaf{T, N, pow} <: AbstractNode{T, N, pow}
     data::Array{T, N}
     mask::BitArray{N}
+    prev::Pointer{Leaf{T, N, pow}}
+    next::Pointer{Leaf{T, N, pow}}
 end
 
 function Leaf{T, N, pow}() where {T, N, pow}
     @assert isbitstype(T)
     dims = size(Leaf{T, N, pow})
-    Leaf{T, N, pow}(Array{T}(undef, dims), falses(dims))
+    data = Array{T}(undef, dims)
+    prev = Pointer{Leaf{T, N, pow}}(nothing)
+    next = Pointer{Leaf{T, N, pow}}(nothing)
+    Leaf{T, N, pow}(data, falses(dims), prev, next)
 end
 
 @pure childtype(::Type{<: Leaf}) = nothing

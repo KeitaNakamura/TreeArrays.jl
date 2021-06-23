@@ -16,6 +16,11 @@ anyactive(x::AbstractNode) = any(x.mask)
 
 Base.isassigned(x::AbstractNode, i::Int...) = x.mask[i...]
 
+get_prev(x::AbstractNode) = isassigned(x.prev) ? x.prev[] : nothing
+set_prev!(x::AbstractNode, v) = (x.prev[] = v; x)
+get_next(x::AbstractNode) = isassigned(x.next) ? x.next[] : nothing
+set_next!(x::AbstractNode, v) = (x.next[] = v; x)
+
 checkmask(::Type{Bool}, x::AbstractNode, i...) = (@_propagate_inbounds_meta; isactive(x, i...)) # checkbounds as well
 checkmask(x::AbstractNode, i...) = (@_propagate_inbounds_meta; checkmask(Bool, x, i...) ? nothing : error("access to unactivated element"))
 
@@ -23,6 +28,8 @@ checkmask(x::AbstractNode, i...) = (@_propagate_inbounds_meta; checkmask(Bool, x
     @boundscheck checkbounds(x, i...)
     @inbounds x[sub2ind(x, i...)]
 end
+
+const Pointer{T <: AbstractNode} = Ref{Union{T, Nothing}}
 
 
 struct Powers{pows}
