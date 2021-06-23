@@ -16,9 +16,9 @@ anyactive(x::AbstractNode) = any(x.mask)
 
 Base.isassigned(x::AbstractNode, i::Int...) = x.mask[i...]
 
-get_prev(x::AbstractNode) = isassigned(x.prev) ? x.prev[] : nothing
+get_prev(x::AbstractNode) = x.prev[]
 set_prev!(x::AbstractNode, v) = (x.prev[] = v; x)
-get_next(x::AbstractNode) = isassigned(x.next) ? x.next[] : nothing
+get_next(x::AbstractNode) = x.next[]
 set_next!(x::AbstractNode, v) = (x.next[] = v; x)
 
 checkmask(::Type{Bool}, x::AbstractNode, i...) = (@_propagate_inbounds_meta; isactive(x, i...)) # checkbounds as well
@@ -34,7 +34,7 @@ end
     @inbounds x[sub2ind(x, i...)] = v
 end
 
-const Pointer{T <: AbstractNode} = Ref{Union{T, Nothing}}
+const Pointer{T <: AbstractNode} = Base.RefValue{Union{T, Nothing}}
 
 
 struct Powers{pows}
