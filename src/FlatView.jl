@@ -34,7 +34,7 @@ end
             block = x.blocks[blockindex...]
             block[localindex...] = v
         else
-            leaf = _setindex!_getleaf(TreeArray(parent(x)), v, I...)
+            leaf = _setindex!_getleaf(TreeView(parent(x)), v, I...)
             x.blocks[blockindex...] = leaf
         end
     end

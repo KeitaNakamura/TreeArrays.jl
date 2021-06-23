@@ -91,4 +91,5 @@ function leaves(x::AbstractNode; guess_size = false)
 
     view(FlatVector{getpower(Tleaf)}(vals), inds)
 end
-leaves(x::TreeArray; guess_size = false) = leaves(x.node; guess_size)
+leaves(x::TreeView; guess_size = false) = leaves(x.node; guess_size)
+leaves(x::FlatView; guess_size = false) = leaves(x.node; guess_size)
