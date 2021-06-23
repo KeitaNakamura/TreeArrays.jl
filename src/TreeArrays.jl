@@ -8,14 +8,14 @@ export
     Powers,
     TreeLinearIndex,
     TreeCartesianIndex,
-    Leaf,
+    LeafNode,
     Node,
     TreeArray,
     FlatView
 
 include("AbstractNode.jl")
 include("TreeIndex.jl")
-include("Leaf.jl")
+include("LeafNode.jl")
 include("Node.jl")
 include("TreeArray.jl")
 include("FlatView.jl")

@@ -1,6 +1,6 @@
 struct FlatView{T, N, pow, Tnode} <: AbstractArray{T, N}
     parent::Tnode
-    blocks::Array{Leaf{T, N, pow}, N}
+    blocks::Array{LeafNode{T, N, pow}, N}
 end
 
 Base.size(x::FlatView{<: Any, <: Any, pow}) where {pow} = .<<(size(x.blocks), pow)
@@ -54,7 +54,7 @@ end
     end
 end
 
-function _setleaves!(A, offset::CartesianIndex{N}, node::AbstractNode{<: Leaf, N}, ::Powers{()}) where {N}
+function _setleaves!(A, offset::CartesianIndex{N}, node::AbstractNode{<: LeafNode, N}, ::Powers{()}) where {N}
     @inbounds for i in eachindex(node)
         if isactive(node, i)
             I = CartesianIndex(ind2sub(node, i))
