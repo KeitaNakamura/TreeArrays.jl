@@ -46,7 +46,6 @@ end
     exps = map(1:depth) do i
         quote
             index = I[$i]
-            allocate!(node, index)
             node = node[index]
         end
     end
