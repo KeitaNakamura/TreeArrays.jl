@@ -11,7 +11,8 @@ export
     LeafNode,
     Node,
     TreeArray,
-    FlatView
+    FlatView,
+    leaves
 
 include("AbstractNode.jl")
 include("TreeIndex.jl")
@@ -19,5 +20,6 @@ include("LeafNode.jl")
 include("Node.jl")
 include("TreeArray.jl")
 include("FlatView.jl")
+include("iterators.jl")
 
 end # module

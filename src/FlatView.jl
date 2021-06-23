@@ -1,5 +1,5 @@
 struct FlatView{T, N, pow, Tnode} <: AbstractArray{T, N}
-    parent::Tnode
+    parent::Tnode # needed for new node allocation
     blocks::Array{LeafNode{T, N, pow}, N}
 end
 
