@@ -36,18 +36,14 @@ end
 wrap_treeview(x) = x
 wrap_treeview(x::AbstractNode) = TreeView(x)
 @generated function Base.getindex(x::TreeView, I::TreeIndex{depth}) where {depth}
-    exps = map(1:depth) do i
-        quote
-            index = I[$i]
-            node = node[index]
-        end
+    ex = :(x.node)
+    for i in 1:depth
+        ex = :($ex[I[$i]])
     end
     quote
         @_inline_meta
         @_propagate_inbounds_meta
-        node = x.node
-        $(exps...)
-        wrap_treeview(node)
+        wrap_treeview($ex)
     end
 end
 
@@ -66,18 +62,17 @@ end
 end
 
 @generated function _setindex!_getleaf(x::TreeView, v, I::TreeIndex{depth}) where {depth}
-    exps = map(1:depth) do i
-        quote
-            index = I[$i]
-            allocate!(node, index)
-            $(i == depth ? :(node[index] = v) : :(node = node[index]))
+    ex = :(x.node)
+    for i in 1:depth
+        if i == depth
+            ex = :(setindex!($ex, v, I[$i]))
+        else
+            ex = :(allocate!($ex, I[$i]))
         end
     end
     quote
         @_inline_meta
         @_propagate_inbounds_meta
-        node = x.node
-        $(exps...)
-        node
+        $ex
     end
 end

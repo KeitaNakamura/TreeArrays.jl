@@ -17,6 +17,7 @@ end
 struct TreeLinearIndex{depth} <: TreeIndex{depth}
     I::NTuple{depth, Int}
 end
+TreeLinearIndex(I::Int...) = TreeLinearIndex(I)
 
 Base.length(::TreeLinearIndex{depth}) where {depth} = depth
 Base.getindex(index::TreeLinearIndex, i::Int) = (@_propagate_inbounds_meta; index.I[i])
@@ -40,6 +41,7 @@ end
 struct TreeCartesianIndex{depth, N} <: TreeIndex{depth}
     I::NTuple{depth, CartesianIndex{N}}
 end
+TreeCartesianIndex(I::CartesianIndex...) = TreeCartesianIndex(I)
 
 Base.length(::TreeCartesianIndex{depth}) where {depth} = depth
 Base.getindex(index::TreeCartesianIndex, i::Int) = (@_propagate_inbounds_meta; index.I[i])

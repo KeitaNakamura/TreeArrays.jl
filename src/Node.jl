@@ -65,7 +65,7 @@ end
 function allocate!(x::Node{T}, i...) where {T}
     @boundscheck checkbounds(x, i...)
     @inbounds begin
-        isactive(x, i...) && return x # TODO: check really allocated?
+        isactive(x, i...) && return x[i...] # TODO: check really allocated?
         if !isassigned(x.data[i...])
             child = T()
         else
@@ -74,7 +74,7 @@ function allocate!(x::Node{T}, i...) where {T}
         end
         x[i...] = child
     end
-    x
+    child
 end
 
 function cleanup!(x::Node)
