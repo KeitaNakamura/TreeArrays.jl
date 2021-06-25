@@ -47,8 +47,8 @@ end
 @pure Base.Tuple(::Powers{pows}) where {pows} = pows
 @pure Base.getindex(P::Powers, i::Int) = Tuple(P)[i]
 
-@pure Powers(x) = Powers{()}()
-@pure Powers(x::Type{<: AbstractNode{T, N, pow}}) where {T, N, pow} = Powers{(pow, Tuple(Powers(T))...)}()
+@pure Powers(::Nothing) = Powers{()}()
+@pure Powers(::Type{Tnode}) where {pow, Tnode <: AbstractNode{<: Any, <: Any, pow}} = Powers{(pow, Tuple(Powers(childtype(Tnode)))...)}()
 Powers(x::AbstractNode) = Powers(typeof(x))
 
 @pure Base.sum(::Powers{p}) where {p} = sum(p)
