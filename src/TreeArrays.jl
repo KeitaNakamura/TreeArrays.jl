@@ -16,6 +16,7 @@ export
     leaves
 
 include("utils.jl")
+include("MaskedArray.jl")
 include("AbstractNode.jl")
 include("TreeIndex.jl")
 include("LeafNode.jl")

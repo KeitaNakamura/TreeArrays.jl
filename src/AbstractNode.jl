@@ -11,17 +11,14 @@ childtype(x::AbstractNode) = childtype(typeof(x))
 leaftype(x::AbstractNode) = leaftype(typeof(x))
 leafeltype(x::AbstractNode) = leafeltype(typeof(x))
 
-isactive(x::AbstractNode, i...) = (@_propagate_inbounds_meta; x.mask[i...])
-allactive(x::AbstractNode) = all(x.mask)
-anyactive(x::AbstractNode) = any(x.mask)
+isactive(x::AbstractNode, i...) = (@_propagate_inbounds_meta; isactive(x.data, i...))
+allactive(x::AbstractNode) = allactive(x.data)
+anyactive(x::AbstractNode) = anyactive(x.data)
 
 get_prev(x::AbstractNode) = x.prev[]
 set_prev!(x::AbstractNode, v) = (x.prev[] = v; x)
 get_next(x::AbstractNode) = x.next[]
 set_next!(x::AbstractNode, v) = (x.next[] = v; x)
-
-checkmask(::Type{Bool}, x::AbstractNode, i...) = (@_propagate_inbounds_meta; isactive(x, i...)) # checkbounds as well
-checkmask(x::AbstractNode, i...) = (@_propagate_inbounds_meta; checkmask(Bool, x, i...) ? nothing : throw(UndefRefError()))
 
 @inline function Base.getindex(x::AbstractNode, i::Int...)
     @boundscheck checkbounds(x, i...)
