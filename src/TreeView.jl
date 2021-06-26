@@ -44,6 +44,21 @@ end
     x
 end
 
+@generated function isactive(x::TreeView, I::TreeIndex{depth}) where {depth}
+    ex = :(x.rootnode)
+    for i in 1:depth
+        ex = quote
+            isactive($ex, I[$i]) || return false
+            $ex[I[$i]]
+        end
+    end
+    quote
+        @_inline_meta
+        @_propagate_inbounds_meta
+        $ex
+        true
+    end
+end
 
 # used in FlatView
 @inline function _setindex!_getleaf(x::TreeView{<: Any, N}, v, I::Vararg{Int, N}) where {N}
