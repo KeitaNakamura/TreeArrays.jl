@@ -15,6 +15,7 @@ export
     FlatView,
     leaves
 
+include("utils.jl")
 include("AbstractNode.jl")
 include("TreeIndex.jl")
 include("LeafNode.jl")

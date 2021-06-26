@@ -7,7 +7,7 @@ function TreeView(rootnode::AbstractNode{<: Any, N}) where {N}
     TreeView{T, N, typeof(rootnode)}(rootnode)
 end
 
-Base.size(x::TreeView{<: Any, N}) where {N} = (n = 1 << sum(Powers(x.rootnode)); ntuple(d -> n, Val(N)))
+Base.size(x::TreeView{<: Any, N}) where {N} = nfill(1 << sum(Powers(x.rootnode)), Val(N))
 
 TreeLinearIndex(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N} = TreeLinearIndex(Powers(x.rootnode), I...)
 TreeCartesianIndex(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N} = TreeCartesianIndex(Powers(x.rootnode), I...)

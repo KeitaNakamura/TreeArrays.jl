@@ -1,7 +1,7 @@
 abstract type AbstractNode{T, N, pow} <: AbstractArray{T, N} end
 
 @pure Base.length(::Type{T}) where {T <: AbstractNode} = prod(size(T))
-@pure Base.size(::Type{<: AbstractNode{T, N, pow}}) where {T, N, pow} = ntuple(d -> 1 << pow, Val(N))
+@pure Base.size(::Type{<: AbstractNode{T, N, pow}}) where {T, N, pow} = nfill(1 << pow, Val(N))
 @pure getpower(::Type{<: AbstractNode{T, N, pow}}) where {T, N, pow} = pow
 
 Base.length(x::AbstractNode) = length(typeof(x))
