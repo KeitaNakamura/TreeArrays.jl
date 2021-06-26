@@ -56,6 +56,8 @@ Powers(x::AbstractNode) = Powers(typeof(x))
 
 @pure Base.tail(::Powers{p}) where {p} = Powers(Base.tail(p))
 
+@pure treeheight(::Powers{p}) where {p} = length(p)
+
 
 # divrem(ind, 1 << p)
 _divrem_pow(ind::Int, p::Int) = (d = ind >> p; (d, ind - (d << p)))
