@@ -34,15 +34,14 @@ end
 end
 
 function FlatView(A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange}, N}) where {N}
+    @boundscheck checkbounds(A, I...)
     node = A.rootnode
-    J = map(i -> Base.unalias(A, i), to_indices(A, I))
-    @boundscheck checkbounds(A, J...)
-    dims = map(length, J)
+    dims = map(length, I)
     p = leafpower(Powers(node))
-    start = CartesianIndex(block_index(p, first.(J)...))
-    stop = CartesianIndex(block_index(p, last.(J)...))
+    start = CartesianIndex(block_index(p, first.(I)...))
+    stop = CartesianIndex(block_index(p, last.(I)...))
     flat = FlatView(node, Array{leaftype(node)}(undef, size(start:stop)), dims)
-    setleaves!(flat, A, Coordinate(J))
+    setleaves!(flat, A, Coordinate(I))
     flat
 end
 
@@ -52,7 +51,7 @@ function setleaves!(flat::FlatView{<: Any, <: Any, p}, A::TreeView, inds) where 
     @inbounds @simd for i in eachindex(inds)
         I = inds[i]
         blockindex = block_index(p, I...)
-        treeindex = dropleafindex(TreeCartesianIndex(A, I...))
+        treeindex = dropleafindex(TreeLinearIndex(A, I...))
         if !isassigned(flat.blocks, blockindex...) && isactive(A, treeindex)
             flat.blocks[blockindex...] = (A[treeindex]).rootnode
         end

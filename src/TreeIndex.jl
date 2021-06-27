@@ -1,15 +1,15 @@
 abstract type TreeIndex{depth} end
 
-@generated function TreeIndex(IndexType, compute_index, ::Powers{p}, i::Int...) where {p}
-    pows = p
+@generated function compute_offsets(offset_func, ::Powers{p}, i::Int...) where {p}
+    P = Powers(p)
     exps = Expr[]
-    for _ in 1:length(pows)
-        push!(exps, :(compute_index(Powers($pows), i...)))
-        pows = Base.tail(pows)
+    for _ in 1:length(p)
+        push!(exps, :(offset_func($P, i...)))
+        P = Base.tail(P)
     end
     quote
         @_inline_meta
-        IndexType(tuple($(exps...)))
+        tuple($(exps...))
     end
 end
 
@@ -22,20 +22,12 @@ TreeLinearIndex(I::Int...) = TreeLinearIndex(I)
 Base.length(::TreeLinearIndex{depth}) where {depth} = depth
 Base.getindex(index::TreeLinearIndex, i::Int) = (@_propagate_inbounds_meta; index.I[i])
 
-@generated function compute_linear(::Powers{pows}, i::Vararg{Int, dim}) where {pows, dim}
-    P = Powers(pows)
-    ttl_p = sum(P)
-    ttl_cp = sum(Base.tail(P))
-    exps = map(1:dim) do d
-        :((((i[$d] - 1) & $(1 << ttl_p - 1)) >> $ttl_cp) << $(sum(Int[P[1] for _ in 1:d-1])))
-    end
-    quote
-        @_inline_meta
-        $(Expr(:call, :+, exps...)) + 1
-    end
+@inline function offset_linear(P::Powers{pows}, i::Vararg{Int, dim}) where {pows, dim}
+    sub2ind(P, Tuple(offset_cartesian(P, i...))...)
 end
 
-@inline TreeLinearIndex(P::Powers, i::Int...) = TreeIndex(TreeLinearIndex, compute_linear, P, i...)
+@inline TreeLinearIndex(P::Powers, i::Int...) =
+    TreeLinearIndex(compute_offsets(offset_linear, P, i...))
 
 
 struct TreeCartesianIndex{depth, N} <: TreeIndex{depth}
@@ -46,17 +38,11 @@ TreeCartesianIndex(I::CartesianIndex...) = TreeCartesianIndex(I)
 Base.length(::TreeCartesianIndex{depth}) where {depth} = depth
 Base.getindex(index::TreeCartesianIndex, i::Int) = (@_propagate_inbounds_meta; index.I[i])
 
-@generated function compute_cartesian(::Powers{pows}, i::Vararg{Int, dim}) where {pows, dim}
-    P = Powers(pows)
-    ttl_p = sum(P)
-    ttl_cp = sum(Base.tail(P))
-    exps = map(1:dim) do d
-        :((((i[$d] - 1) & $(1 << ttl_p - 1)) >> $ttl_cp))
-    end
-    quote
-        @_inline_meta
-        CartesianIndex(tuple($(exps...)) .+ 1)
-    end
+@inline function offset_cartesian(P::Powers, I::Int...)
+    p = sum(P)
+    p_child = sum(Base.tail(P))
+    CartesianIndex(@. ((I - 1) & $(1 << p - 1)) >> p_child + 1)
 end
 
-@inline TreeCartesianIndex(P::Powers, i::Int...) = TreeIndex(TreeCartesianIndex, compute_cartesian, P, i...)
+@inline TreeCartesianIndex(P::Powers, i::Int...) =
+    TreeCartesianIndex(compute_offsets(offset_cartesian, P, i...))
