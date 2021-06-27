@@ -58,18 +58,19 @@ Powers(x::AbstractNode) = Powers(typeof(x))
 
 
 # divrem(ind, 1 << p)
-_divrem_pow(ind::Int, p::Int) = (d = ind >> p; (d, ind - (d << p)))
+@inline _divrem_pow(ind::Int, p::Int) = (d = ind >> p; (d, ind - (d << p)))
 
-@inline ind2sub(node::AbstractNode{<: Any, N, p}, ind::Int) where {N, p} = _ind2sub_recurse(Val(N), p, ind-1)
+@inline ind2sub(node::AbstractNode{<: Any, N, p}, ind::Integer) where {N, p} = _ind2sub_recurse(Val(N), p, ind-one(ind))
 @inline _ind2sub_recurse(::Val{1}, p::Int, ind::Int) = ind + 1
 @inline function _ind2sub_recurse(::Val{N}, p::Int, ind::Int) where {N}
     indnext, r = _divrem_pow(ind, p)
-    (r + 1, _ind2sub_recurse(Val(N-1), p, indnext)...)
+    (r+one(r), _ind2sub_recurse(Val(N-1), p, indnext)...)
 end
 
-@inline sub2ind(node::AbstractNode{<: Any, N, p}, inds::Int...) where {N, p} = _sub2ind_recurse(Val(1), p, inds[1], Base.tail(inds)...)
-@inline sub2ind(::Powers{pows}, inds::Int...) where {pows} = _sub2ind_recurse(Val(1), pows[1], inds[1], Base.tail(inds)...)
+@inline sub2ind(p::Int, inds::Integer...) = _sub2ind_recurse(Val(1), p, inds...)
+@inline sub2ind(P::Powers, inds::Integer...) = sub2ind(P[1], inds...)
+@inline sub2ind(node::AbstractNode, inds::Integer...) = sub2ind(Powers(node), inds...)
 @inline _sub2ind_recurse(::Val, p, ind) = ind
 @inline function _sub2ind_recurse(::Val{N}, p, ind, i::Integer, I::Integer...) where {N}
-    _sub2ind_recurse(Val(N+1), p, ind+((i-1)*N)<<p, I...)
+    _sub2ind_recurse(Val(N+1), p, ind+((i-one(i))*N)<<p, I...)
 end
