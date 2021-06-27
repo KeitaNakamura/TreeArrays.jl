@@ -13,6 +13,7 @@ end
 Base.IndexStyle(::Type{<: MaskedArray}) = IndexLinear()
 Base.size(x::MaskedArray) = size(x.data)
 
+Base.isassigned(x::MaskedArray, i::Int...) = (@_propagate_inbounds_meta; isactive(x, i...))
 isactive(x::MaskedArray, i...) = (@_propagate_inbounds_meta; x.mask[i...])
 allactive(x::MaskedArray) = all(x.mask)
 anyactive(x::MaskedArray) = any(x.mask)

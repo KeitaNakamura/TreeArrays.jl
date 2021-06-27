@@ -1,4 +1,4 @@
-struct FlatView{T, N, pow, Tnode} <: AbstractArray{T, N}
+struct FlatView{T, N, pow, Tnode <: AbstractNode{<: Any, N}} <: AbstractArray{T, N}
     parent::Tnode # needed for new node allocation
     blocks::Array{LeafNode{T, N, pow}, N}
     dims::NTuple{N, Int}
@@ -33,7 +33,9 @@ end
     x
 end
 
-function FlatView(A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange}, N}) where {N}
+_to_indices(A::AbstractArray, I) = map(i -> Base.unalias(A, i), to_indices(A, axes(A), I))
+function FlatView(A::TreeView{<: Any, N}, I_::Vararg{Any, N}) where {N}
+    I = _to_indices(A, I_)
     @boundscheck checkbounds(A, I...)
     node = A.rootnode
     dims = map(length, I)
@@ -48,12 +50,14 @@ end
 dropleafindex(x::TreeLinearIndex{depth}) where {depth} = TreeLinearIndex(ntuple(i -> x.I[i], Val(depth-1)))
 dropleafindex(x::TreeCartesianIndex{depth}) where {depth} = TreeCartesianIndex(ntuple(i -> x.I[i], Val(depth-1)))
 function setleaves!(flat::FlatView{<: Any, <: Any, p}, A::TreeView, inds) where {p}
+    blocks = flat.blocks
     @inbounds @simd for i in eachindex(inds)
         I = inds[i]
-        blockindex = block_index(p, I...)
+        blockindex = Base._sub2ind(size(blocks), block_index(p, I...)...)
         treeindex = dropleafindex(TreeLinearIndex(A, I...))
-        if !isassigned(flat.blocks, blockindex...) && isactive(A, treeindex)
-            flat.blocks[blockindex...] = (A[treeindex]).rootnode
+        # @assert checkbounds(Bool, blocks, blockindex...)
+        if !isassigned(blocks, blockindex) && isactive(A, treeindex)
+            blocks[blockindex] = (A[treeindex]).rootnode
         end
     end
     flat
