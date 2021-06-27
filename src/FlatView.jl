@@ -1,16 +1,20 @@
-struct FlatView{T, N, pow, Tnode <: AbstractNode{<: Any, N}} <: AbstractArray{T, N}
+struct FlatView{T, N, pow, Tnode <: AbstractNode{<: Any, N}, Tindices <: Tuple} <: AbstractArray{T, N}
     parent::Tnode # needed for new node allocation
     blocks::Array{LeafNode{T, N, pow}, N}
-    dims::NTuple{N, Int}
+    indices::Tindices
 end
 
-Base.size(x::FlatView) = x.dims
+Base.size(x::FlatView) = map(length, x.indices)
 Base.parent(x::FlatView) = x.parent
+
+function blockoffset(x::FlatView{<: Any, <: Any, p}) where {p}
+    block_index(p, first.(x.indices)...) .- 1
+end
 
 @inline function Base.getindex(x::FlatView{<: Any, N, pow}, I::Vararg{Int, N}) where {N, pow}
     @boundscheck checkbounds(x, I...)
-    blockindex = @. (I-1) >> pow + 1
-    localindex = @. I - (blockindex-1) << pow
+    @inbounds I = Coordinate(x.indices)[I...]
+    blockindex, localindex = block_local_index(x, I...)
     @inbounds begin
         block = x.blocks[blockindex...]
         block[localindex...]
@@ -19,8 +23,8 @@ end
 
 @inline function Base.setindex!(x::FlatView{<: Any, N, pow}, v, I::Vararg{Int, N}) where {N, pow}
     @boundscheck checkbounds(x, I...)
-    blockindex = @. (I-1) >> pow + 1
-    localindex = @. I - (blockindex-1) << pow
+    @inbounds I = Coordinate(x.indices)[I...]
+    blockindex, localindex = block_local_index(x, I...)
     @inbounds begin
         if isassigned(x.blocks, blockindex...)
             block = x.blocks[blockindex...]
@@ -34,26 +38,25 @@ end
 end
 
 _to_indices(A::AbstractArray, I) = map(i -> Base.unalias(A, i), to_indices(A, axes(A), I))
-function FlatView(A::TreeView{<: Any, N}, I_::Vararg{Any, N}) where {N}
-    I = _to_indices(A, I_)
-    @boundscheck checkbounds(A, I...)
+function FlatView(A::TreeView{<: Any, N}, I::Vararg{Any, N}) where {N}
+    indices = _to_indices(A, I)
+    @boundscheck checkbounds(A, indices...)
     node = A.rootnode
-    dims = map(length, I)
     p = leafpower(Powers(node))
-    start = CartesianIndex(block_index(p, first.(I)...))
-    stop = CartesianIndex(block_index(p, last.(I)...))
-    flat = FlatView(node, Array{leaftype(node)}(undef, size(start:stop)), dims)
-    setleaves!(flat, A, Coordinate(I))
+    start = CartesianIndex(block_index(p, first.(indices)...))
+    stop = CartesianIndex(block_index(p, last.(indices)...))
+    flat = FlatView(node, Array{leaftype(node)}(undef, size(start:stop)), indices)
+    setleaves!(flat, A, Coordinate(indices))
     flat
 end
 
 dropleafindex(x::TreeLinearIndex{depth}) where {depth} = TreeLinearIndex(ntuple(i -> x.I[i], Val(depth-1)))
 dropleafindex(x::TreeCartesianIndex{depth}) where {depth} = TreeCartesianIndex(ntuple(i -> x.I[i], Val(depth-1)))
-function setleaves!(flat::FlatView{<: Any, <: Any, p}, A::TreeView, inds) where {p}
+function setleaves!(flat::FlatView, A::TreeView, inds)
     blocks = flat.blocks
     @inbounds @simd for i in eachindex(inds)
         I = inds[i]
-        blockindex = Base._sub2ind(size(blocks), block_index(p, I...)...)
+        blockindex = Base._sub2ind(size(blocks), block_index(flat, I...)...)
         treeindex = dropleafindex(TreeLinearIndex(A, I...))
         # @assert checkbounds(Bool, blocks, blockindex...)
         if !isassigned(blocks, blockindex) && isactive(A, treeindex)
@@ -68,4 +71,10 @@ end
     blockindex = block_index(p, I...)
     localindex = @. I - (blockindex-1) << p
     blockindex, localindex
+end
+
+@inline block_index(x::FlatView{<: Any, <: Any, p}, I::Int...) where {p} = block_index(p, I...) .- blockoffset(x)
+@inline function block_local_index(x::FlatView{<: Any, <: Any, p}, I::Int...) where {p}
+    blockindex, localindex = block_local_index(p, I...)
+    blockindex .- blockoffset(x), localindex
 end
