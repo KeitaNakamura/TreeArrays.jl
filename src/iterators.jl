@@ -74,7 +74,7 @@ function leaves(x::AbstractNode; guess_size = false)
     if guess_size
         len = 0
         for node in WalkNodes(findfirst_node_above_leafnode(x))
-            len += count(node.mask)
+            len += countmask(node.data)
         end
         sizehint!(vals, len)
         sizehint!(inds, len * length(Tleaf))

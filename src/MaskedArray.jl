@@ -56,6 +56,7 @@ end
 end
 
 fillmask!(x::MaskedArray, v) = fill!(x.mask, convert(Bool, v))
+countmask(x::MaskedArray) = count(x.mask)
 
 # `f` should be `f(mask)`
 function findentry(f, x::MaskedArray)
