@@ -16,8 +16,8 @@ end
     @inbounds I = Coordinate(x.indices)[I...]
     blockindex, localindex = block_local_index(x, I...)
     @inbounds begin
-        block = x.blocks[blockindex...]
-        block[localindex...]
+        block = x.blocks[blockindex]
+        block[localindex]
     end
 end
 
@@ -27,11 +27,11 @@ end
     blockindex, localindex = block_local_index(x, I...)
     @inbounds begin
         if isassigned(x.blocks, blockindex...)
-            block = x.blocks[blockindex...]
-            block[localindex...] = v
+            block = x.blocks[blockindex]
+            block[localindex] = v
         else
             leaf = _setindex!_getleaf(TreeView(parent(x)), v, I...)
-            x.blocks[blockindex...] = leaf
+            x.blocks[blockindex] = leaf
         end
     end
     x
@@ -56,7 +56,7 @@ function setleaves!(flat::FlatView, A::TreeView, inds)
     blocks = flat.blocks
     @inbounds @simd for i in eachindex(inds)
         I = inds[i]
-        blockindex = Base._sub2ind(size(blocks), block_index(flat, I...)...)
+        blockindex = block_index(flat, I...)
         treeindex = dropleafindex(TreeLinearIndex(A, I...))
         # @assert checkbounds(Bool, blocks, blockindex...)
         if !isassigned(blocks, blockindex) && isactive(A, treeindex)
@@ -66,6 +66,7 @@ function setleaves!(flat::FlatView, A::TreeView, inds)
     flat
 end
 
+# cartesian
 @inline block_index(p::Int, I::Int...) = @. (I-1) >> p + 1
 @inline function block_local_index(p::Int, I::Int...)
     blockindex = block_index(p, I...)
@@ -73,8 +74,13 @@ end
     blockindex, localindex
 end
 
-@inline block_index(x::FlatView{<: Any, <: Any, p}, I::Int...) where {p} = block_index(p, I...) .- blockoffset(x)
+# linear
+@inline function block_index(x::FlatView{<: Any, <: Any, p}, I::Int...) where {p}
+    Base._sub2ind(size(x.blocks), (block_index(p, I...) .- blockoffset(x))...)
+end
 @inline function block_local_index(x::FlatView{<: Any, <: Any, p}, I::Int...) where {p}
     blockindex, localindex = block_local_index(p, I...)
-    blockindex .- blockoffset(x), localindex
+    blocklinear = Base._sub2ind(size(x.blocks), (blockindex .- blockoffset(x))...)
+    locallinear = sub2ind(p, localindex...)
+    blocklinear, locallinear
 end
