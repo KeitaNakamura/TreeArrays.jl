@@ -42,7 +42,7 @@ function FlatView(A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, Colon}
     indices = _to_indices(A, I)
     @boundscheck checkbounds(A, indices...)
     node = A.rootnode
-    p = leafpower(Powers(node))
+    p = Powers(node)[end]
     start = CartesianIndex(block_index(p, first.(indices)...))
     stop = CartesianIndex(block_index(p, last.(indices)...))
     flat = FlatView(node, Array{leaftype(node)}(undef, size(start:stop)), indices)

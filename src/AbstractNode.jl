@@ -2,7 +2,6 @@ abstract type AbstractNode{T, N, pow} <: AbstractArray{T, N} end
 
 @pure Base.length(::Type{T}) where {T <: AbstractNode} = prod(size(T))
 @pure Base.size(::Type{<: AbstractNode{T, N, pow}}) where {T, N, pow} = nfill(1 << pow, Val(N))
-@pure getpower(::Type{<: AbstractNode{T, N, pow}}) where {T, N, pow} = pow
 
 Base.length(x::AbstractNode) = length(typeof(x))
 Base.size(x::AbstractNode) = size(typeof(x))
@@ -39,8 +38,11 @@ end
 @pure Powers(p::Tuple{Vararg{Int}}) = Powers{p}()
 @pure Powers(p::Int...) = Powers{p}()
 
-@pure Base.Tuple(::Powers{pows}) where {pows} = pows
-@pure Base.getindex(P::Powers, i::Int) = Tuple(P)[i]
+@pure Base.Tuple(::Powers{p}) where {p} = p
+@pure Base.getindex(::Powers{p}, i::Int) where {p} = p[i]
+@pure Base.length(::Powers{p}) where {p} = length(p)
+@pure Base.lastindex(P::Powers) = length(P)
+@pure Base.firstindex(P::Powers) = 1
 
 @pure Powers(::Nothing) = Powers{()}()
 @pure Powers(::Type{Tnode}) where {pow, Tnode <: AbstractNode{<: Any, <: Any, pow}} = Powers{(pow, Tuple(Powers(childtype(Tnode)))...)}()
@@ -50,9 +52,6 @@ Powers(x::AbstractNode) = Powers(typeof(x))
 @pure Base.sum(::Powers{()}) = 0
 
 @pure Base.tail(::Powers{p}) where {p} = Powers(Base.tail(p))
-
-@pure treeheight(::Powers{p}) where {p} = length(p)
-@pure leafpower(::Powers{p}) where {p} = p[end]
 
 
 # divrem(ind, 1 << p)
