@@ -38,7 +38,7 @@ end
 end
 
 _to_indices(A::AbstractArray, I) = map(i -> Base.unalias(A, i), to_indices(A, axes(A), I))
-function FlatView(A::TreeView{<: Any, N}, I::Vararg{Any, N}) where {N}
+function FlatView(A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, Colon}, N}) where {N}
     indices = _to_indices(A, I)
     @boundscheck checkbounds(A, indices...)
     node = A.rootnode
@@ -46,21 +46,20 @@ function FlatView(A::TreeView{<: Any, N}, I::Vararg{Any, N}) where {N}
     start = CartesianIndex(block_index(p, first.(indices)...))
     stop = CartesianIndex(block_index(p, last.(indices)...))
     flat = FlatView(node, Array{leaftype(node)}(undef, size(start:stop)), indices)
-    setleaves!(flat, A, Coordinate(indices))
+    setleaves!(flat, A)
     flat
 end
 
 dropleafindex(x::TreeLinearIndex{depth}) where {depth} = TreeLinearIndex(ntuple(i -> x.I[i], Val(depth-1)))
 dropleafindex(x::TreeCartesianIndex{depth}) where {depth} = TreeCartesianIndex(ntuple(i -> x.I[i], Val(depth-1)))
-function setleaves!(flat::FlatView, A::TreeView, inds)
+function setleaves!(flat::FlatView{<: Any, <: Any, p}, A::TreeView) where {p}
     blocks = flat.blocks
-    @inbounds @simd for i in eachindex(inds)
-        I = inds[i]
-        blockindex = block_index(flat, I...)
+    @inbounds for i in CartesianIndices(blocks)
+        blockindex = Tuple(i)
+        I = (blockindex .+ blockoffset(flat)) .<< p # global index
         treeindex = dropleafindex(TreeLinearIndex(A, I...))
-        # @assert checkbounds(Bool, blocks, blockindex...)
-        if !isassigned(blocks, blockindex) && isactive(A, treeindex)
-            blocks[blockindex] = (A[treeindex]).rootnode
+        if isactive(A, treeindex)
+            blocks[blockindex...] = (A[treeindex]).rootnode
         end
     end
     flat
