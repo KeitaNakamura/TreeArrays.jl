@@ -50,8 +50,7 @@ function FlatView(A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, Colon}
     flat
 end
 
-dropleafindex(x::TreeLinearIndex{depth}) where {depth} = TreeLinearIndex(ntuple(i -> x.I[i], Val(depth-1)))
-dropleafindex(x::TreeCartesianIndex{depth}) where {depth} = TreeCartesianIndex(ntuple(i -> x.I[i], Val(depth-1)))
+dropleafindex(x::TreeIndex{depth}) where {depth} = TreeIndex(ntuple(i -> x.I[i], Val(depth-1)))
 function setleaves!(flat::FlatView{<: Any, <: Any, p}, A::TreeView) where {p}
     blocks = flat.blocks
     @inbounds for i in CartesianIndices(blocks)

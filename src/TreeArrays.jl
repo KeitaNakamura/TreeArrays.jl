@@ -6,6 +6,7 @@ using Coordinates
 
 export
     Powers,
+    TreeIndex,
     TreeLinearIndex,
     TreeCartesianIndex,
     LeafNode,

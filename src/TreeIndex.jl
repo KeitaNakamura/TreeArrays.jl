@@ -1,5 +1,14 @@
 abstract type TreeIndex{depth} end
 
+Base.length(::TreeIndex{depth}) where {depth} = depth
+Base.getindex(index::TreeIndex, i::Int) = (@_propagate_inbounds_meta; index.I[i])
+Base.firstindex(index::TreeIndex) = 1
+Base.lastindex(index::TreeIndex) = length(index)
+
+TreeIndex(I::Tuple{Vararg{Int}}) = TreeLinearIndex(I)
+TreeIndex(I::Tuple{Vararg{CartesianIndex}}) = TreeCartesianIndex(I)
+TreeIndex(I...) = TreeIndex(I)
+
 @generated function compute_offsets(offset_func, ::Powers{p}, i::Int...) where {p}
     P = Powers(p)
     exps = Expr[]
@@ -19,9 +28,6 @@ struct TreeLinearIndex{depth} <: TreeIndex{depth}
 end
 TreeLinearIndex(I::Int...) = TreeLinearIndex(I)
 
-Base.length(::TreeLinearIndex{depth}) where {depth} = depth
-Base.getindex(index::TreeLinearIndex, i::Int) = (@_propagate_inbounds_meta; index.I[i])
-
 @inline function offset_linear(P::Powers{pows}, i::Vararg{Int, dim}) where {pows, dim}
     sub2ind(P, Tuple(offset_cartesian(P, i...))...)
 end
@@ -34,9 +40,6 @@ struct TreeCartesianIndex{depth, N} <: TreeIndex{depth}
     I::NTuple{depth, CartesianIndex{N}}
 end
 TreeCartesianIndex(I::CartesianIndex...) = TreeCartesianIndex(I)
-
-Base.length(::TreeCartesianIndex{depth}) where {depth} = depth
-Base.getindex(index::TreeCartesianIndex, i::Int) = (@_propagate_inbounds_meta; index.I[i])
 
 @inline function offset_cartesian(P::Powers, I::Int...)
     p = sum(P)
