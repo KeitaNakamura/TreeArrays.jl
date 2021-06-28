@@ -44,6 +44,21 @@ end
     x
 end
 
+@generated function Base.setindex!(x::TreeView, ::Nothing, I::TreeIndex{depth}) where {depth}
+    ex = :(x.rootnode)
+    for i in 1:depth
+        ex = quote
+            isactive($ex, I[$i]) || return x
+            $(i == depth ? :($ex[I[$i]] = false) : :($ex[I[$i]]))
+        end
+    end
+    quote
+        @_inline_meta
+        @_propagate_inbounds_meta
+        $ex
+    end
+end
+
 @generated function isactive(x::TreeView, I::TreeIndex{depth}) where {depth}
     ex = :(x.rootnode)
     for i in 1:depth
