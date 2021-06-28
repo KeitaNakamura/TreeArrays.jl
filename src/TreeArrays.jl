@@ -13,8 +13,7 @@ export
     TreeView,
     TreeIndex,
     FlatView,
-    eachleaf!,
-    leaves
+    eachleaf!
 
 include("utils.jl")
 include("MaskedArray.jl")
