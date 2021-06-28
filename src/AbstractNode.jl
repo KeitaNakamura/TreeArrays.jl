@@ -30,8 +30,6 @@ end
     @inbounds x[sub2ind(x, i...)] = v
 end
 
-const Pointer{T <: AbstractNode} = Base.RefValue{Union{T, Nothing}}
-
 
 struct Powers{pows}
     function Powers{pows}() where {pows}

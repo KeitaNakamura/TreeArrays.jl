@@ -47,9 +47,11 @@ end
 @generated function Base.setindex!(x::TreeView, ::Nothing, I::TreeIndex{depth}) where {depth}
     ex = :(x.rootnode)
     for i in 1:depth
+        sym = Symbol(:node, i)
         ex = quote
-            isactive($ex, I[$i]) || return x
-            $(i == depth ? :($ex[I[$i]] = false) : :($ex[I[$i]]))
+            $sym = $ex
+            isactive($sym, I[$i]) || return x
+            $(i == depth ? :($sym[I[$i]] = nothing) : :(unsafe_getindex($sym, I[$i])))
         end
     end
     quote
@@ -62,16 +64,17 @@ end
 @generated function isactive(x::TreeView, I::TreeIndex{depth}) where {depth}
     ex = :(x.rootnode)
     for i in 1:depth
+        sym = Symbol(:node, i)
         ex = quote
-            isactive($ex, I[$i]) || return false
-            $ex[I[$i]]
+            $sym = $ex
+            isactive($sym, I[$i]) || return false
+            $(i == depth ? true : :(unsafe_getindex($sym, I[$i])))
         end
     end
     quote
         @_inline_meta
         @_propagate_inbounds_meta
         $ex
-        true
     end
 end
 
