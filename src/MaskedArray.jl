@@ -1,14 +1,17 @@
 struct MaskedArray{T, N} <: AbstractArray{T, N}
     data::Array{T, N}
-    mask::BitArray{N}
+    mask::Array{Bool, N} # faster than BitArray?
 end
 
 @inline function MaskedArray{T}(::UndefInitializer, dims::NTuple{N, Int}) where {T, N}
     data = Array{T}(undef, dims)
-    mask = falses(dims)
+    mask = fill!(similar(data, Bool), false)
     MaskedArray(data, mask)
 end
-@inline MaskedArray(data::Array) = MaskedArray(data, falses(size(data)))
+@inline function MaskedArray(data::Array)
+    mask = fill!(similar(data, Bool), false)
+    MaskedArray(data, mask)
+end
 
 Base.IndexStyle(::Type{<: MaskedArray}) = IndexLinear()
 Base.size(x::MaskedArray) = size(x.data)
@@ -60,6 +63,6 @@ countmask(x::MaskedArray) = count(x.mask)
 
 # `f` should be `f(mask)`
 function findentry(f, x::MaskedArray)
-    i = f(x.mask)
+    i = f(vec(x.mask)) # `vec` is not needed for BitArray
     i === nothing ? nothing : @inbounds x[i]
 end
