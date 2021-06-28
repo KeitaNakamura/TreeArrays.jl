@@ -13,6 +13,7 @@ export
     TreeView,
     TreeIndex,
     FlatView,
+    eachleaf!,
     leaves
 
 include("utils.jl")

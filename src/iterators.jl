@@ -40,6 +40,30 @@ function Base.iterate(x::WalkNodes, state)
     (next, next)
 end
 
+function _eachleaf!(f, node::LeafNode)
+    @inbounds @simd for i in eachindex(node)
+        if isactive(node, i)
+            unsafe_setindex!(node, f(unsafe_getindex(node, i)), i)
+        end
+    end
+end
+function _eachleaf!(f, node::Node)
+    @inbounds for i in eachindex(node)
+        if isactive(node, i)
+            _eachleaf!(f, unsafe_getindex(node, i))
+        end
+    end
+end
+
+eachleaf!(f, node::LeafNode) = _eachleaf!(f, node)
+function eachleaf!(f, node::Node)
+    @inbounds Threads.@threads for i in eachindex(node)
+        if isactive(node, i)
+            _eachleaf!(f, unsafe_getindex(node, i))
+        end
+    end
+end
+
 
 struct FlatVector{pow, T, V <: AbstractArray{T}} <: AbstractVector{T}
     vals::Vector{V}
@@ -91,5 +115,4 @@ function leaves(x::AbstractNode; guess_size = false)
 
     view(FlatVector{getpower(Tleaf)}(vals), inds)
 end
-leaves(x::TreeView; guess_size = false) = leaves(x.node; guess_size)
-leaves(x::FlatView; guess_size = false) = leaves(x.node; guess_size)
+leaves(x::TreeView; guess_size = false) = leaves(x.rootnode; guess_size)
