@@ -38,7 +38,7 @@ end
 end
 
 _to_indices(A::AbstractArray, I) = map(i -> Base.unalias(A, i), to_indices(A, axes(A), I))
-function ContinuousView(A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, Colon}, N}) where {N}
+@inline function ContinuousView(A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, Colon}, N}) where {N}
     indices = _to_indices(A, I)
     @boundscheck checkbounds(A, indices...)
     node = A.rootnode
@@ -46,6 +46,16 @@ function ContinuousView(A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, 
     start = CartesianIndex(block_index(p, first.(indices)...))
     stop = CartesianIndex(block_index(p, last.(indices)...))
     ContinuousView(node, generateblocks(start:stop, A), indices)
+end
+@inline function SpotView(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
+    @boundscheck checkbounds(A, I...)
+    node = A.rootnode
+    p = Powers(node)[end]
+    start = CartesianIndex(block_index(p, I...))
+    stop = start + oneunit(start)
+    ContinuousView(node,
+                   generateblocks(SArray{NTuple{N, 2}}(start:stop), A),
+                   @. UnitRange(I, I + (1 << p) -1))
 end
 
 dropleafindex(x::TreeIndex{depth}) where {depth} = TreeIndex(ntuple(i -> x.I[i], Val(depth-1)))

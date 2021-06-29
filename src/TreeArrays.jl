@@ -15,6 +15,7 @@ export
     TreeView,
     TreeIndex,
     ContinuousView,
+    SpotView,
     eachleaf!
 
 include("utils.jl")
