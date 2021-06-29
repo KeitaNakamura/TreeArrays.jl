@@ -18,21 +18,33 @@ Base.IndexStyle(::Type{<: Node}) = IndexLinear()
 
 @inline function Base.getindex(x::Node, i::Int)
     @boundscheck checkbounds(x, i)
-    @inbounds begin
-        (isnull(x) || !isactive(x, i)) && return null(childtype(x))
-        unsafe_getindex(x, i)
-    end
+    # Sometimes `i` is inactive, but corresponding data is not null
+    # because mask is only set to `false` when the entry is deactivated (as long as call `cleanup!`)
+    # This should be very careful because returned child node can be unexpectedly changed.
+    @inbounds isnull(x) ? null(childtype(x)) : unsafe_getindex(x, i)
 end
 
 @inline function Base.setindex!(x::Node, v, i::Int)
     @boundscheck checkbounds(x, i)
+    # The mask is activated in MaskedArray.
+    # Allowing mask to be active only when setting corresponding data.
+    # This ensures that when mask is active, its value is always valid
+    # Similarly if null at `i`, then corresponding mask is always false (see also `delete!(node, i)`)
+    isnull(v) && throw(ArgumentError("trying to set null node, call `delete!(node, i)` instead"))
     @inbounds x.data[i] = v
     x
 end
 
 @inline function Base.setindex!(x::Node, ::Nothing, i::Int)
     @boundscheck checkbounds(x, i)
-    @inbounds isactive(x.data, i) && (x.data[i] = null(childtype(x)))
+    @inbounds begin
+        # Make mask false at i (don't delete corresponding data)
+        # The children are also deactivated
+        if isactive(x, i)
+            x.data[i] = nothing # make `mask` `false` at `i`
+            deactivate!(unsafe_getindex(x, i))
+        end
+    end
     x
 end
 
@@ -46,32 +58,32 @@ end
     @inbounds unsafe_setindex!(x.data, v, i)
 end
 
-function free!(x::Node, i...)
+@inline function deactivate!(x::Node)
+    isnull(x) && return x
+    fillmask!(x, false)
+    for i in eachindex(x)
+        @inbounds deactivate!(unsafe_getindex(x, i))
+    end
+    x
+end
+
+function Base.delete!(x::Node, i...)
     @boundscheck checkbounds(x, i...)
     @inbounds begin
-        if isactive(x, i...)
-            x[i...] = nothing
-        end
-        if !isnull(unsafe_getindex(x.data, i...))
-            unsafe_setindex!(x.data, null(childtype(x)), i...)
-        end
-        x
+        # only this case allows to set null node in `x`
+        x.data[i] = nothing # make mask false
+        unsafe_setindex!(x, null(childtype(x)), i...)
     end
+    x
 end
 
 function allocate!(x::Node{T}, i...) where {T}
     @boundscheck checkbounds(x, i...)
     @inbounds begin
-        if isactive(x, i...)
-            childnode = unsafe_getindex(x, i...) # TODO: check really allocated?, should deactivate all entries?
-        else
-            if isnull(unsafe_getindex(x, i...))
-                childnode = T()
-            else
-                childnode = unsafe_getindex(x, i...) # set itself
-                fillmask!(childnode.data, false)
-            end
-            x[i...] = childnode
+        childnode = unsafe_getindex(x, i...)
+        if isnull(childnode) # && !isactive(x, i)
+            childnode = T()
+            x[i...] = childnode # activated in setindex!
         end
     end
     childnode
@@ -80,11 +92,12 @@ end
 function cleanup!(x::Node)
     @inbounds for i in eachindex(x)
         if isactive(x, i)
+            # if `i` is active, then child node is always not null
             childnode = unsafe_getindex(x, i)
             cleanup!(childnode)
-            !anyactive(childnode) && free!(x, i)
+            !anyactive(childnode) && delete!(x, i)
         else
-            free!(x, i)
+            delete!(x, i)
         end
     end
     x

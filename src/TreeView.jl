@@ -104,4 +104,16 @@ end
 end
 
 
-Base.fill!(x::TreeView, ::Nothing) = fillmask!(x.rootnode.data, false)
+function Base.fill!(x::TreeView, ::Nothing)
+    node = x.rootnode
+    isnull(node) && return x
+    if length(x) > THREADS_THRESHOLD
+        fillmask!(node, false)
+        Threads.@threads for i in eachindex(node)
+            @inbounds deactivate!(unsafe_getindex(node, i))
+        end
+    else
+        deactivate!(node)
+    end
+    x
+end

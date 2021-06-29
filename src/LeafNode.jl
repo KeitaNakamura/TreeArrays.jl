@@ -5,7 +5,6 @@ struct LeafNode{T, N, pow} <: AbstractNode{T, N, pow}
 end
 
 function LeafNode{T, N, pow}() where {T, N, pow}
-    @assert isbitstype(T)
     dims = size(LeafNode{T, N, pow})
     data = MaskedArray{T}(undef, dims)
     LeafNode{T, N, pow}(data)
@@ -36,6 +35,11 @@ end
 @inline function unsafe_setindex!(x::LeafNode, v, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds unsafe_setindex!(x.data, v, i)
+end
+
+@inline function deactivate!(x::LeafNode)
+    isnull(x) || fillmask!(x, false)
+    x
 end
 
 allocate!(x::LeafNode, i...) = x

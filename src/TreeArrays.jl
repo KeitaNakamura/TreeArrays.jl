@@ -13,10 +13,11 @@ export
     LeafNode,
     Node,
     TreeView,
-    TreeIndex,
     ContinuousView,
     SpotView,
     eachleaf!
+
+const THREADS_THRESHOLD = 1 << 13
 
 include("utils.jl")
 include("MaskedArray.jl")

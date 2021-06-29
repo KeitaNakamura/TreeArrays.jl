@@ -18,10 +18,7 @@ isactive(x::AbstractNode, i...) = (@_propagate_inbounds_meta; isactive(x.data, i
 allactive(x::AbstractNode) = allactive(x.data)
 anyactive(x::AbstractNode) = anyactive(x.data)
 
-get_prev(x::AbstractNode) = x.prev[]
-set_prev!(x::AbstractNode, v) = (x.prev[] = v; x)
-get_next(x::AbstractNode) = x.next[]
-set_next!(x::AbstractNode, v) = (x.next[] = v; x)
+fillmask!(x::AbstractNode, v) = fillmask!(x.data, v)
 
 @inline function Base.getindex(x::AbstractNode, i::Int...)
     @boundscheck checkbounds(x, i...)

@@ -1,5 +1,3 @@
-const THREADS_THRESHOLD = 1 << 13
-
 ############
 # LeafNode #
 ############
