@@ -1,5 +1,7 @@
 struct LeafNode{T, N, pow} <: AbstractNode{T, N, pow}
     data::MaskedArray{T, N}
+    LeafNode{T, N, pow}(data) where {T, N, pow} = new(data)
+    LeafNode{T, N, pow}(::Nothing) where {T, N, pow} = new()
 end
 
 function LeafNode{T, N, pow}() where {T, N, pow}

@@ -6,6 +6,10 @@ abstract type AbstractNode{T, N, pow} <: AbstractArray{T, N} end
 Base.length(x::AbstractNode) = length(typeof(x))
 Base.size(x::AbstractNode) = size(typeof(x))
 
+@pure null(::Type{Tnode}) where {T, N, pow, Tnode <: AbstractNode{T, N, pow}} = Tnode(nothing)
+null(x::AbstractNode) = null(typeof(x))
+isnull(x::AbstractNode) = x === null(x)
+
 childtype(x::AbstractNode) = childtype(typeof(x))
 leaftype(x::AbstractNode) = leaftype(typeof(x))
 leafeltype(x::AbstractNode) = leafeltype(typeof(x))

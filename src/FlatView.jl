@@ -1,6 +1,6 @@
-struct FlatView{T, N, pow, Tnode <: AbstractNode{<: Any, N}, Tindices <: Tuple} <: AbstractArray{T, N}
+struct FlatView{T, N, pow, Tnode <: AbstractNode{<: Any, N}, Tindices <: Tuple, Tblocks <: AbstractArray{LeafNode{T, N, pow}, N}} <: AbstractArray{T, N}
     parent::Tnode # needed for new node allocation
-    blocks::Array{LeafNode{T, N, pow}, N}
+    blocks::Tblocks
     indices::Tindices
 end
 
@@ -25,13 +25,13 @@ end
     @boundscheck checkbounds(x, I...)
     @inbounds I = Coordinate(x.indices)[I...]
     blockindex, localindex = block_local_index(x, I...)
-    @inbounds begin
-        if isassigned(x.blocks, blockindex...)
-            block = x.blocks[blockindex]
-            block[localindex] = v
-        else
+    begin
+        block = x.blocks[blockindex]
+        if isnull(block)
             leaf = _setindex!_getleaf(TreeView(parent(x)), v, I...)
             x.blocks[blockindex] = leaf
+        else
+            block[localindex] = v
         end
     end
     x
@@ -45,23 +45,18 @@ function FlatView(A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, Colon}
     p = Powers(node)[end]
     start = CartesianIndex(block_index(p, first.(indices)...))
     stop = CartesianIndex(block_index(p, last.(indices)...))
-    flat = FlatView(node, Array{leaftype(node)}(undef, size(start:stop)), indices)
-    setleaves!(flat, A)
-    flat
+    FlatView(node, generateblocks(start:stop, A), indices)
 end
 
 dropleafindex(x::TreeIndex{depth}) where {depth} = TreeIndex(ntuple(i -> x.I[i], Val(depth-1)))
-function setleaves!(flat::FlatView{<: Any, <: Any, p}, A::TreeView) where {p}
-    blocks = flat.blocks
-    @inbounds for i in CartesianIndices(blocks)
+function generateblocks(blockindices, A::TreeView)
+    p = Powers(A.rootnode)[end]
+    map(blockindices) do i
         blockindex = Tuple(i)
-        I = (blockindex .+ blockoffset(flat)) .<< p # global index
+        I = blockindex .<< p # global index
         treeindex = dropleafindex(TreeLinearIndex(A, I...))
-        if isactive(A, treeindex)
-            blocks[blockindex...] = (A[treeindex]).rootnode
-        end
+        (A[treeindex]).rootnode
     end
-    flat
 end
 
 # cartesian
