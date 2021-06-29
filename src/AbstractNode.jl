@@ -33,6 +33,16 @@ end
     @inbounds x[sub2ind(x, i...)] = v
 end
 
+@inline function unsafe_getindex(x::AbstractNode, i::Int...)
+    @boundscheck checkbounds(x, i...)
+    @inbounds unsafe_getindex(x, sub2ind(x, i...))
+end
+
+@inline function unsafe_setindex!(x::AbstractNode, v, i::Int...)
+    @boundscheck checkbounds(x, i...)
+    @inbounds unsafe_setindex!(x, v, sub2ind(x, i...))
+end
+
 
 struct Powers{pows}
     function Powers{pows}() where {pows}

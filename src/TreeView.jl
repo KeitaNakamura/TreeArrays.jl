@@ -102,3 +102,6 @@ end
         $ex
     end
 end
+
+
+Base.fill!(x::TreeView, ::Nothing) = fillmask!(x.rootnode.data, false)

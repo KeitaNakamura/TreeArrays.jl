@@ -37,9 +37,8 @@ end
     x
 end
 
-_to_indices(A::AbstractArray, I) = map(i -> Base.unalias(A, i), to_indices(A, axes(A), I))
 @inline function ContinuousView(A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, Colon}, N}) where {N}
-    indices = _to_indices(A, I)
+    indices = to_indices(A, I)
     @boundscheck checkbounds(A, indices...)
     node = A.rootnode
     p = Powers(node)[end]
