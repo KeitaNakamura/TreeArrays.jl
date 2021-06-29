@@ -10,8 +10,8 @@ Base.replace_in_print_matrix(A::SubArray{<: Any, <: Any, <: ShowArray}, i::Integ
 Base.replace_in_print_matrix(A::ShowArray, i::Integer, j::Integer, s::AbstractString) =
     isstored(A, i, j) ? s : Base.replace_with_centered_mark(s)
 
-Base.show(io::IO, mime::MIME"text/plain", x::Union{AbstractNode, TreeView, FlatView}) = show(io, mime, ShowArray(x))
-Base.show(io::IO, x::Union{AbstractNode, TreeView, FlatView}) = show(io, ShowArray(x))
+Base.show(io::IO, mime::MIME"text/plain", x::Union{AbstractNode, TreeView, ContinuousView}) = show(io, mime, ShowArray(x))
+Base.show(io::IO, x::Union{AbstractNode, TreeView, ContinuousView}) = show(io, ShowArray(x))
 
 function Base.show(io::IO, ::MIME"text/plain", x::ShowArray)
     print(io, summary(x.array), ":")

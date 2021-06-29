@@ -14,7 +14,7 @@ export
     Node,
     TreeView,
     TreeIndex,
-    FlatView,
+    ContinuousView,
     eachleaf!
 
 include("utils.jl")
@@ -24,7 +24,7 @@ include("TreeIndex.jl")
 include("LeafNode.jl")
 include("Node.jl")
 include("TreeView.jl")
-include("FlatView.jl")
+include("ContinuousView.jl")
 include("iterators.jl")
 include("show.jl")
 

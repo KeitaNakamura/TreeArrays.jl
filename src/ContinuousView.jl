@@ -1,17 +1,17 @@
-struct FlatView{T, N, pow, Tnode <: AbstractNode{<: Any, N}, Tindices <: Tuple, Tblocks <: AbstractArray{LeafNode{T, N, pow}, N}} <: AbstractArray{T, N}
+struct ContinuousView{T, N, pow, Tnode <: AbstractNode{<: Any, N}, Tindices <: Tuple, Tblocks <: AbstractArray{LeafNode{T, N, pow}, N}} <: AbstractArray{T, N}
     parent::Tnode # needed for new node allocation
     blocks::Tblocks
     indices::Tindices
 end
 
-Base.size(x::FlatView) = map(length, x.indices)
-Base.parent(x::FlatView) = x.parent
+Base.size(x::ContinuousView) = map(length, x.indices)
+Base.parent(x::ContinuousView) = x.parent
 
-function blockoffset(x::FlatView{<: Any, <: Any, p}) where {p}
+function blockoffset(x::ContinuousView{<: Any, <: Any, p}) where {p}
     block_index(p, first.(x.indices)...) .- 1
 end
 
-@inline function Base.getindex(x::FlatView{<: Any, N, pow}, I::Vararg{Int, N}) where {N, pow}
+@inline function Base.getindex(x::ContinuousView{<: Any, N, pow}, I::Vararg{Int, N}) where {N, pow}
     @boundscheck checkbounds(x, I...)
     @inbounds I = Coordinate(x.indices)[I...]
     blockindex, localindex = block_local_index(x, I...)
@@ -21,11 +21,11 @@ end
     end
 end
 
-@inline function Base.setindex!(x::FlatView{<: Any, N, pow}, v, I::Vararg{Int, N}) where {N, pow}
+@inline function Base.setindex!(x::ContinuousView{<: Any, N, pow}, v, I::Vararg{Int, N}) where {N, pow}
     @boundscheck checkbounds(x, I...)
     @inbounds I = Coordinate(x.indices)[I...]
     blockindex, localindex = block_local_index(x, I...)
-    begin
+    @inbounds begin
         block = x.blocks[blockindex]
         if isnull(block)
             leaf = _setindex!_getleaf(TreeView(parent(x)), v, I...)
@@ -38,14 +38,14 @@ end
 end
 
 _to_indices(A::AbstractArray, I) = map(i -> Base.unalias(A, i), to_indices(A, axes(A), I))
-function FlatView(A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, Colon}, N}) where {N}
+function ContinuousView(A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, Colon}, N}) where {N}
     indices = _to_indices(A, I)
     @boundscheck checkbounds(A, indices...)
     node = A.rootnode
     p = Powers(node)[end]
     start = CartesianIndex(block_index(p, first.(indices)...))
     stop = CartesianIndex(block_index(p, last.(indices)...))
-    FlatView(node, generateblocks(start:stop, A), indices)
+    ContinuousView(node, generateblocks(start:stop, A), indices)
 end
 
 dropleafindex(x::TreeIndex{depth}) where {depth} = TreeIndex(ntuple(i -> x.I[i], Val(depth-1)))
@@ -55,7 +55,7 @@ function generateblocks(blockindices, A::TreeView)
         blockindex = Tuple(i)
         I = blockindex .<< p # global index
         treeindex = dropleafindex(TreeLinearIndex(A, I...))
-        (A[treeindex]).rootnode
+        (A[treeindex]).rootnode # should be @inbounds?
     end
 end
 
@@ -68,10 +68,10 @@ end
 end
 
 # linear
-@inline function block_index(x::FlatView{<: Any, <: Any, p}, I::Int...) where {p}
+@inline function block_index(x::ContinuousView{<: Any, <: Any, p}, I::Int...) where {p}
     Base._sub2ind(size(x.blocks), (block_index(p, I...) .- blockoffset(x))...)
 end
-@inline function block_local_index(x::FlatView{<: Any, <: Any, p}, I::Int...) where {p}
+@inline function block_local_index(x::ContinuousView{<: Any, <: Any, p}, I::Int...) where {p}
     blockindex, localindex = block_local_index(p, I...)
     blocklinear = Base._sub2ind(size(x.blocks), (blockindex .- blockoffset(x))...)
     locallinear = sub2ind(p, localindex...)

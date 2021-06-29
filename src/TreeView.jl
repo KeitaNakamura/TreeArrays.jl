@@ -78,7 +78,7 @@ end
     end
 end
 
-# used in FlatView
+# used in ContinuousView
 @inline function _setindex!_getleaf(x::TreeView{<: Any, N}, v, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(x, I...)
     index = TreeLinearIndex(x, I...)
