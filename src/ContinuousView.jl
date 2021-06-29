@@ -50,10 +50,9 @@ end
 
 dropleafindex(x::TreeIndex{depth}) where {depth} = TreeIndex(ntuple(i -> x.I[i], Val(depth-1)))
 function generateblocks(blockindices, A::TreeView)
-    p = Powers(A.rootnode)[end]
     map(blockindices) do i
         blockindex = Tuple(i)
-        I = blockindex .<< p # global index
+        I = blockindex .<< Powers(A)[end] # global index
         treeindex = dropleafindex(TreeLinearIndex(A, I...))
         (A[treeindex]).rootnode # should be @inbounds?
     end

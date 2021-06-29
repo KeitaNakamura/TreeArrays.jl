@@ -7,10 +7,12 @@ function TreeView(rootnode::AbstractNode{<: Any, N}) where {N}
     TreeView{T, N, typeof(rootnode)}(rootnode)
 end
 
-Base.size(x::TreeView{<: Any, N}) where {N} = nfill(1 << sum(Powers(x.rootnode)), Val(N))
+Powers(::Type{<: TreeView{<: Any, <: Any, Tnode}}) where {Tnode} = Powers(Tnode)
+Powers(x::TreeView) = Powers(typeof(x))
+Base.size(x::TreeView{<: Any, N}) where {N} = nfill(1 << sum(Powers(x)), Val(N))
 
-TreeLinearIndex(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N} = TreeLinearIndex(Powers(x.rootnode), I...)
-TreeCartesianIndex(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N} = TreeCartesianIndex(Powers(x.rootnode), I...)
+TreeLinearIndex(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N} = TreeLinearIndex(Powers(x), I...)
+TreeCartesianIndex(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N} = TreeCartesianIndex(Powers(x), I...)
 
 function Base.getindex(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(x, I...)
