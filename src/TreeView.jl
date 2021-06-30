@@ -14,16 +14,22 @@ Base.size(x::TreeView{<: Any, N}) where {N} = nfill(1 << sum(Powers(x)), Val(N))
 TreeLinearIndex(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N} = TreeLinearIndex(Powers(x), I...)
 TreeCartesianIndex(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N} = TreeCartesianIndex(Powers(x), I...)
 
-function Base.getindex(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
+@inline function Base.getindex(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(x, I...)
     index = TreeLinearIndex(x, I...)
     @inbounds x[index]
 end
 
-function Base.setindex!(x::TreeView{<: Any, N}, v, I::Vararg{Int, N}) where {N}
+@inline function Base.setindex!(x::TreeView{<: Any, N}, v, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(x, I...)
     index = TreeLinearIndex(x, I...)
     @inbounds x[index] = v
+end
+
+@inline function isactive(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
+    @boundscheck checkbounds(x, I...)
+    index = TreeLinearIndex(x, I...)
+    @inbounds isactive(x, index)
 end
 
 wrap_treeview(x) = x

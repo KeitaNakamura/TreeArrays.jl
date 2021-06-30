@@ -14,7 +14,7 @@ childtype(x::AbstractNode) = childtype(typeof(x))
 leaftype(x::AbstractNode) = leaftype(typeof(x))
 leafeltype(x::AbstractNode) = leafeltype(typeof(x))
 
-isactive(x::AbstractNode, i...) = (@_propagate_inbounds_meta; isactive(x.data, i...))
+isactive(x::AbstractNode, i...) = (@_propagate_inbounds_meta; isnull(x) ? false : isactive(x.data, i...))
 allactive(x::AbstractNode) = allactive(x.data)
 anyactive(x::AbstractNode) = anyactive(x.data)
 
