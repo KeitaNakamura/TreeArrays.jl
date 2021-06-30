@@ -123,3 +123,20 @@ function Base.fill!(x::TreeView, ::Nothing)
     end
     x
 end
+
+function nleaves(x::TreeView)
+    node = x.rootnode
+    if length(x) > THREADS_THRESHOLD
+        isnull(node) && return 0
+        counts = zeros(Int, Threads.nthreads())
+        @inbounds Threads.@threads for i in eachindex(node)
+            if isactive(node, i)
+                child = unsafe_getindex(node, i)
+                counts[Threads.threadid()] += nleaves(child)
+            end
+        end
+        sum(counts)
+    else
+        nleaves(node)
+    end
+end

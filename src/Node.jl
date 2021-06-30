@@ -102,3 +102,15 @@ function cleanup!(x::Node)
     end
     x
 end
+
+function nleaves(x::Node)
+    isnull(x) && return 0
+    count = 0
+    @inbounds for i in eachindex(x)
+        if isactive(x, i)
+            child = unsafe_getindex(x, i)
+            count += nleaves(child)
+        end
+    end
+    count
+end

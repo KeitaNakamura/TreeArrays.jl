@@ -44,3 +44,5 @@ end
 
 allocate!(x::LeafNode, i...) = x
 cleanup!(x::LeafNode) = x
+
+nleaves(x::LeafNode) = countmask(x.data)

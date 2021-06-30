@@ -15,7 +15,8 @@ export
     TreeView,
     ContinuousView,
     SpotView,
-    eachleaf!
+    eachleaf!,
+    nleaves
 
 const THREADS_THRESHOLD = 1 << 13
 
