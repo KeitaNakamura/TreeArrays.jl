@@ -6,7 +6,7 @@ using StaticArrays
 using Coordinates
 
 export
-    Powers,
+    TreeSize,
     TreeIndex,
     TreeLinearIndex,
     TreeCartesianIndex,

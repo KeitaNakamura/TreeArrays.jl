@@ -1,13 +1,13 @@
-struct LeafNode{T, N, pow} <: AbstractNode{T, N, pow}
+struct LeafNode{T, N, p} <: AbstractNode{T, N, p}
     data::MaskedArray{T, N}
-    LeafNode{T, N, pow}(data) where {T, N, pow} = new(data)
-    LeafNode{T, N, pow}(::Nothing) where {T, N, pow} = new()
+    LeafNode{T, N, p}(data) where {T, N, p} = new(data)
+    LeafNode{T, N, p}(::Nothing) where {T, N, p} = new()
 end
 
-function LeafNode{T, N, pow}() where {T, N, pow}
-    dims = size(LeafNode{T, N, pow})
+function LeafNode{T, N, p}() where {T, N, p}
+    dims = size(LeafNode{T, N, p})
     data = MaskedArray{T}(undef, dims)
-    LeafNode{T, N, pow}(data)
+    LeafNode{T, N, p}(data)
 end
 
 @pure childtype(::Type{<: LeafNode}) = nothing

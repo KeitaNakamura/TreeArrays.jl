@@ -9,12 +9,12 @@ TreeIndex(I::Tuple{Vararg{Int}}) = TreeLinearIndex(I)
 TreeIndex(I::Tuple{Vararg{CartesianIndex}}) = TreeCartesianIndex(I)
 TreeIndex(I...) = TreeIndex(I)
 
-@generated function compute_offsets(offset_func, ::Powers{p}, i::Int...) where {p}
-    P = Powers(p)
+@generated function compute_offsets(offset_func, ::TreeSize{s}, i::Integer...) where {s}
+    S = TreeSize(s)
     exps = Expr[]
-    for _ in 1:length(p)
-        push!(exps, :(offset_func($P, i...)))
-        P = Base.tail(P)
+    for _ in 1:length(S)
+        push!(exps, :(offset_func($S, i...)))
+        S = Base.tail(S)
     end
     quote
         @_inline_meta
@@ -28,12 +28,12 @@ struct TreeLinearIndex{depth} <: TreeIndex{depth}
 end
 TreeLinearIndex(I::Int...) = TreeLinearIndex(I)
 
-@inline function offset_linear(P::Powers{pows}, i::Vararg{Int, dim}) where {pows, dim}
-    sub2ind(P, Tuple(offset_cartesian(P, i...))...)
+@inline function offset_linear(S::TreeSize, i::Vararg{Integer, dim}) where {dim}
+    Base._sub2ind(S[1], Tuple(offset_cartesian(S, i...))...)
 end
 
-@inline TreeLinearIndex(P::Powers, i::Int...) =
-    TreeLinearIndex(compute_offsets(offset_linear, P, i...))
+@inline TreeLinearIndex(S::TreeSize, i::Integer...) =
+    TreeLinearIndex(compute_offsets(offset_linear, S, i...))
 
 
 struct TreeCartesianIndex{depth, N} <: TreeIndex{depth}
@@ -41,11 +41,11 @@ struct TreeCartesianIndex{depth, N} <: TreeIndex{depth}
 end
 TreeCartesianIndex(I::CartesianIndex...) = TreeCartesianIndex(I)
 
-@inline function offset_cartesian(P::Powers, I::Int...)
-    p = sum(P)
-    p_child = sum(Base.tail(P))
-    CartesianIndex(@. ((I - 1) & $(1 << p - 1)) >> p_child + 1)
+@inline function offset_cartesian(S::TreeSize, I::Integer...)
+    dims = totalsize(S)
+    dims_child = totalsize(Base.tail(S))
+    CartesianIndex(@. div(rem(I - 1, dims), dims_child) + 1)
 end
 
-@inline TreeCartesianIndex(P::Powers, i::Int...) =
-    TreeCartesianIndex(compute_offsets(offset_cartesian, P, i...))
+@inline TreeCartesianIndex(S::TreeSize, i::Integer...) =
+    TreeCartesianIndex(compute_offsets(offset_cartesian, S, i...))

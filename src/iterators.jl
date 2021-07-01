@@ -43,19 +43,19 @@ end
 
 @inline function _eachleaf!(f, node, I, indices)
     @_propagate_inbounds_meta
-    p = sum(Base.tail(Powers(node)))
+    dims = totalsize(Base.tail(TreeSize(node)))
     if isactive(node, I...)
         child = unsafe_getindex(node, I...)
-        offset = @. (I - 1) << p
-        childinds = CartesianIndex(offset.+1):CartesianIndex(offset.+(1<<p))
+        offset = @. (I - 1) * dims
+        childinds = CartesianIndex(offset.+1):CartesianIndex(offset.+dims)
         eachleaf!(f, child, (indices ∩ childinds) .- CartesianIndex(offset))
     end
 end
 function eachleaf!(f, node::Node, indices::CartesianIndices)
     @boundscheck checkbounds(TreeView(node), indices)
-    P = Powers(node)
-    start = offset_cartesian(P, Tuple(first(indices))...)
-    stop = offset_cartesian(P, Tuple(last(indices))...)
+    S = TreeSize(node)
+    start = offset_cartesian(S, Tuple(first(indices))...)
+    stop = offset_cartesian(S, Tuple(last(indices))...)
     for cartesian in start:stop
         I = Tuple(cartesian)
         @inbounds _eachleaf!(f, node, I, indices)
@@ -63,9 +63,9 @@ function eachleaf!(f, node::Node, indices::CartesianIndices)
 end
 function eachleaf_threads!(f, node::Node, indices::CartesianIndices) # threads version
     @boundscheck checkbounds(TreeView(node), indices)
-    P = Powers(node)
-    start = offset_cartesian(P, Tuple(first(indices))...)
-    stop = offset_cartesian(P, Tuple(last(indices))...)
+    S = TreeSize(node)
+    start = offset_cartesian(S, Tuple(first(indices))...)
+    stop = offset_cartesian(S, Tuple(last(indices))...)
     Threads.@threads for cartesian in start:stop
         I = Tuple(cartesian)
         @inbounds _eachleaf!(f, node, I, indices)

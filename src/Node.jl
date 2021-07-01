@@ -1,13 +1,13 @@
-struct Node{T <: AbstractNode, N, pow} <: AbstractNode{T, N, pow}
+struct Node{T <: AbstractNode, N, p} <: AbstractNode{T, N, p}
     data::MaskedArray{T, N}
-    Node{T, N, pow}(data) where {T, N, pow} = new(data)
-    Node{T, N, pow}(::Nothing) where {T, N, pow} = new()
+    Node{T, N, p}(data) where {T, N, p} = new(data)
+    Node{T, N, p}(::Nothing) where {T, N, p} = new()
 end
 
-function Node{T, N, pow}() where {T, N, pow}
-    dims = size(Node{T, N, pow})
+function Node{T, N, p}() where {T, N, p}
+    dims = size(Node{T, N, p})
     data = MaskedArray([null(T) for I in CartesianIndices(dims)])
-    Node{T, N, pow}(data)
+    Node{T, N, p}(data)
 end
 
 @pure childtype(::Type{<: Node{T}}) where {T} = T

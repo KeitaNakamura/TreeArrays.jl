@@ -1,12 +1,12 @@
-abstract type AbstractNode{T, N, pow} <: AbstractArray{T, N} end
+abstract type AbstractNode{T, N, p} <: AbstractArray{T, N} end
 
 @pure Base.length(::Type{T}) where {T <: AbstractNode} = prod(size(T))
-@pure Base.size(::Type{<: AbstractNode{T, N, pow}}) where {T, N, pow} = nfill(1 << pow, Val(N))
+@pure Base.size(::Type{Tnode}) where {Tnode <: AbstractNode} = convert.(Int, TreeSize(Tnode)[1])
 
 Base.length(x::AbstractNode) = length(typeof(x))
 Base.size(x::AbstractNode) = size(typeof(x))
 
-@pure null(::Type{Tnode}) where {T, N, pow, Tnode <: AbstractNode{T, N, pow}} = Tnode(nothing)
+@pure null(::Type{Tnode}) where {Tnode <: AbstractNode} = Tnode(nothing)
 null(x::AbstractNode) = null(typeof(x))
 isnull(x::AbstractNode) = x === null(x)
 
@@ -22,63 +22,42 @@ fillmask!(x::AbstractNode, v) = fillmask!(x.data, v)
 
 @inline function Base.getindex(x::AbstractNode, i::Int...)
     @boundscheck checkbounds(x, i...)
-    @inbounds x[sub2ind(x, i...)]
+    @inbounds x[Base._sub2ind(TreeSize(x)[1], i...)]
 end
 
 @inline function Base.setindex!(x::AbstractNode, v, i::Int...)
     @boundscheck checkbounds(x, i...)
-    @inbounds x[sub2ind(x, i...)] = v
+    @inbounds x[Base._sub2ind(TreeSize(x)[1], i...)] = v
 end
 
 @inline function unsafe_getindex(x::AbstractNode, i::Int...)
     @boundscheck checkbounds(x, i...)
-    @inbounds unsafe_getindex(x, sub2ind(x, i...))
+    @inbounds unsafe_getindex(x, Base._sub2ind(TreeSize(x)[1], i...))
 end
 
 @inline function unsafe_setindex!(x::AbstractNode, v, i::Int...)
     @boundscheck checkbounds(x, i...)
-    @inbounds unsafe_setindex!(x, v, sub2ind(x, i...))
+    @inbounds unsafe_setindex!(x, v, Base._sub2ind(TreeSize(x)[1], i...))
 end
 
 
-struct Powers{pows}
-    function Powers{pows}() where {pows}
-        new{pows::Tuple{Vararg{Int}}}()
+struct TreeSize{S}
+    function TreeSize{S}() where {S}
+        new{S::Tuple{Vararg{Tuple{Vararg{Integer}}}}}()
     end
 end
-@pure Powers(p::Tuple{Vararg{Int}}) = Powers{p}()
-@pure Powers(p::Int...) = Powers{p}()
+@pure TreeSize(S::Tuple) = TreeSize{S}()
+@pure Base.Tuple(::TreeSize{S}) where {S} = S
 
-@pure Base.Tuple(::Powers{p}) where {p} = p
-@pure Base.getindex(::Powers{p}, i::Int) where {p} = p[i]
-@pure Base.length(::Powers{p}) where {p} = length(p)
-@pure Base.lastindex(P::Powers) = length(P)
-@pure Base.firstindex(P::Powers) = 1
+@pure TreeSize(::Nothing) = TreeSize{()}()
+@pure TreeSize(::Type{Tnode}) where {N, p, Tnode <: AbstractNode{<: Any, N, p}} = TreeSize{(nfill(Power2(p), Val(N)), Tuple(TreeSize(childtype(Tnode)))...)}()
+@pure TreeSize(x::AbstractNode) = TreeSize(typeof(x))
 
-@pure Powers(::Nothing) = Powers{()}()
-@pure Powers(::Type{Tnode}) where {pow, Tnode <: AbstractNode{<: Any, <: Any, pow}} = Powers{(pow, Tuple(Powers(childtype(Tnode)))...)}()
-Powers(x::AbstractNode) = Powers(typeof(x))
+@pure Base.length(::TreeSize{S}) where {S} = length(S)
+@pure Base.getindex(::TreeSize{S}, i::Int) where {S} = S[i]
+@pure Base.firstindex(::TreeSize) = 1
+@pure Base.lastindex(x::TreeSize) = length(x)
+@pure Base.tail(::TreeSize{S}) where {S} = length(S) == 1 ? TreeSize{(map(zero, S[1]),)}() : TreeSize{Base.tail(S)}()
+@pure totalsize(::TreeSize{S}) where {S} = broadcast(*, S...)
 
-@pure Base.sum(::Powers{p}) where {p} = sum(p)
-@pure Base.sum(::Powers{()}) = 0
-
-@pure Base.tail(::Powers{p}) where {p} = Powers(Base.tail(p))
-
-
-# divrem(ind, 1 << p)
-@inline _divrem_pow(ind::Int, p::Int) = (d = ind >> p; (d, ind - (d << p)))
-
-@inline ind2sub(node::AbstractNode{<: Any, N, p}, ind::Integer) where {N, p} = _ind2sub_recurse(Val(N), p, ind-one(ind))
-@inline _ind2sub_recurse(::Val{1}, p::Int, ind::Int) = ind + 1
-@inline function _ind2sub_recurse(::Val{N}, p::Int, ind::Int) where {N}
-    indnext, r = _divrem_pow(ind, p)
-    (r+one(r), _ind2sub_recurse(Val(N-1), p, indnext)...)
-end
-
-@inline sub2ind(p::Int, inds::Integer...) = _sub2ind_recurse(Val(1), p, inds...)
-@inline sub2ind(P::Powers, inds::Integer...) = sub2ind(P[1], inds...)
-@inline sub2ind(node::AbstractNode, inds::Integer...) = sub2ind(Powers(node), inds...)
-@inline _sub2ind_recurse(::Val, p, ind) = ind
-@inline function _sub2ind_recurse(::Val{N}, p, ind, i::Integer, I::Integer...) where {N}
-    _sub2ind_recurse(Val(N+1), p, ind+((i-one(i))*N)<<p, I...)
-end
+Base.show(io::IO, ::TreeSize{S}) where {S} = print(io, "TreeSize", S)

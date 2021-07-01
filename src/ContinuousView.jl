@@ -1,4 +1,4 @@
-struct ContinuousView{T, N, pow, Tnode <: AbstractNode{<: Any, N}, Tindices <: Tuple, Tblocks <: AbstractArray{LeafNode{T, N, pow}, N}} <: AbstractArray{T, N}
+struct ContinuousView{T, N, p, Tnode <: AbstractNode{<: Any, N}, Tindices <: Tuple, Tblocks <: AbstractArray{LeafNode{T, N, p}, N}} <: AbstractArray{T, N}
     parent::Tnode # needed for new node allocation
     blocks::Tblocks
     indices::Tindices
@@ -7,11 +7,11 @@ end
 Base.size(x::ContinuousView) = map(length, x.indices)
 Base.parent(x::ContinuousView) = x.parent
 
-function blockoffset(x::ContinuousView{<: Any, <: Any, p}) where {p}
-    block_index(p, first.(x.indices)...) .- 1
+function blockoffset(x::ContinuousView)
+    block_index(TreeSize(x.parent)[end], first.(x.indices)...) .- 1
 end
 
-@inline function Base.getindex(x::ContinuousView{<: Any, N, pow}, I::Vararg{Int, N}) where {N, pow}
+@inline function Base.getindex(x::ContinuousView{<: Any, N}, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(x, I...)
     @inbounds I = Coordinate(x.indices)[I...]
     blockindex, localindex = block_local_index(x, I...)
@@ -21,7 +21,7 @@ end
     end
 end
 
-@inline function Base.setindex!(x::ContinuousView{<: Any, N, pow}, v, I::Vararg{Int, N}) where {N, pow}
+@inline function Base.setindex!(x::ContinuousView{<: Any, N}, v, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(x, I...)
     @inbounds I = Coordinate(x.indices)[I...]
     blockindex, localindex = block_local_index(x, I...)
@@ -41,47 +41,49 @@ end
     indices = to_indices(A, I)
     @boundscheck checkbounds(A, indices...)
     node = A.rootnode
-    p = Powers(node)[end]
-    start = CartesianIndex(block_index(p, first.(indices)...))
-    stop = CartesianIndex(block_index(p, last.(indices)...))
+    dims = TreeSize(node)[end]
+    start = CartesianIndex(block_index(dims, first.(indices)...))
+    stop = CartesianIndex(block_index(dims, last.(indices)...))
     ContinuousView(node, generateblocks(start:stop, A), indices)
 end
 @inline function SpotView(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(A, I...)
     node = A.rootnode
-    p = Powers(node)[end]
-    start = CartesianIndex(block_index(p, I...))
+    dims = TreeSize(node)[end]
+    start = CartesianIndex(block_index(dims, I...))
     stop = start + oneunit(start)
     ContinuousView(node,
                    generateblocks(SArray{NTuple{N, 2}}(start:stop), A),
-                   @. UnitRange(I, I + (1 << p) -1))
+                   @. UnitRange(I, I+dims-1))
 end
 
 dropleafindex(x::TreeIndex{depth}) where {depth} = TreeIndex(ntuple(i -> x.I[i], Val(depth-1)))
 function generateblocks(blockindices, A::TreeView)
     map(blockindices) do i
         blockindex = Tuple(i)
-        I = blockindex .<< Powers(A)[end] # global index
+        I = blockindex .* TreeSize(A.rootnode)[end] # global index
         treeindex = dropleafindex(TreeLinearIndex(A, I...))
-        (A[treeindex]).rootnode # should be @inbounds?
+        @inbounds (A[treeindex]).rootnode # should be @inbounds?
     end
 end
 
 # cartesian
-@inline block_index(p::Int, I::Int...) = @. (I-1) >> p + 1
-@inline function block_local_index(p::Int, I::Int...)
-    blockindex = block_index(p, I...)
-    localindex = @. I - (blockindex-1) << p
+@inline block_index(dims::Tuple, I::Int...) = @. div(I-1, dims) + 1
+@inline function block_local_index(dims::Tuple, I::Int...)
+    blockindex = block_index(dims, I...)
+    localindex = @. I - (blockindex-1) * dims
     blockindex, localindex
 end
 
 # linear
-@inline function block_index(x::ContinuousView{<: Any, <: Any, p}, I::Int...) where {p}
-    Base._sub2ind(size(x.blocks), (block_index(p, I...) .- blockoffset(x))...)
+@inline function block_index(x::ContinuousView, I::Int...)
+    dims = TreeSize(x.parent)[end]
+    Base._sub2ind(size(x.blocks), (block_index(dims, I...) .- blockoffset(x))...)
 end
-@inline function block_local_index(x::ContinuousView{<: Any, <: Any, p}, I::Int...) where {p}
-    blockindex, localindex = block_local_index(p, I...)
+@inline function block_local_index(x::ContinuousView, I::Int...)
+    dims = TreeSize(x.parent)[end]
+    blockindex, localindex = block_local_index(dims, I...)
     blocklinear = Base._sub2ind(size(x.blocks), (blockindex .- blockoffset(x))...)
-    locallinear = sub2ind(p, localindex...)
+    locallinear = Base._sub2ind(dims, localindex...)
     blocklinear, locallinear
 end
