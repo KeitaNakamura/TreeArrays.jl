@@ -9,18 +9,11 @@ TreeIndex(I::Tuple{Vararg{Int}}) = TreeLinearIndex(I)
 TreeIndex(I::Tuple{Vararg{CartesianIndex}}) = TreeCartesianIndex(I)
 TreeIndex(I...) = TreeIndex(I)
 
-@generated function compute_offsets(offset_func, ::TreeSize{s}, i::Integer...) where {s}
-    S = TreeSize(s)
-    exps = Expr[]
-    for _ in 1:length(S)
-        push!(exps, :(offset_func($S, i...)))
-        S = Base.tail(S)
-    end
-    quote
-        @_inline_meta
-        tuple($(exps...))
-    end
-end
+@inline _compute_offsets(::Val{1}, offset_func, x::TreeSize, i::Integer...) = (offset_func(x, i...),)
+@inline _compute_offsets(::Val{N}, offset_func, x::TreeSize, i::Integer...) where {N} =
+    (offset_func(x, i...), _compute_offsets(Val(N-1), offset_func, Base.tail(x), i...)...)
+@inline compute_offsets(offset_func, x::TreeSize, i::Integer...) =
+    _compute_offsets(Val(length(x)), offset_func, x, i...)
 
 
 struct TreeLinearIndex{depth} <: TreeIndex{depth}
