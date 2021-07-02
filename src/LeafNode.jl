@@ -27,22 +27,12 @@ end
     x
 end
 
-@inline function unsafe_getindex(x::LeafNode, i::Int)
-    @boundscheck checkbounds(x, i)
-    @inbounds unsafe_getindex(x.data, i)
-end
-
-@inline function unsafe_setindex!(x::LeafNode, v, i::Int)
-    @boundscheck checkbounds(x, i)
-    @inbounds unsafe_setindex!(x.data, v, i)
-end
-
 @inline function deactivate!(x::LeafNode)
     isnull(x) || fillmask!(x, false)
     x
 end
 
-allocate!(x::LeafNode, i...) = x
+allocate!(x::LeafNode, i) = x
 cleanup!(x::LeafNode) = x
 
 nleaves(x::LeafNode) = countmask(x.data)

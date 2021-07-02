@@ -30,6 +30,16 @@ end
     @inbounds x[Base._sub2ind(TreeSize(x)[1], i...)] = v
 end
 
+@inline function unsafe_getindex(x::AbstractNode, i::Int)
+    @boundscheck checkbounds(x, i)
+    @inbounds unsafe_getindex(x.data, i)
+end
+
+@inline function unsafe_setindex!(x::AbstractNode, v, i::Int)
+    @boundscheck checkbounds(x, i)
+    @inbounds unsafe_setindex!(x.data, v, i)
+end
+
 @inline function unsafe_getindex(x::AbstractNode, i::Int...)
     @boundscheck checkbounds(x, i...)
     @inbounds unsafe_getindex(x, Base._sub2ind(TreeSize(x)[1], i...))
@@ -38,6 +48,32 @@ end
 @inline function unsafe_setindex!(x::AbstractNode, v, i::Int...)
     @boundscheck checkbounds(x, i...)
     @inbounds unsafe_setindex!(x, v, Base._sub2ind(TreeSize(x)[1], i...))
+end
+
+function cleanup!(x::AbstractNode)
+    @inbounds for i in eachindex(x)
+        if isactive(x, i)
+            # if `i` is active, then child node is always not null
+            childnode = unsafe_getindex(x, i)
+            cleanup!(childnode)
+            !anyactive(childnode) && delete!(x, i)
+        else
+            delete!(x, i)
+        end
+    end
+    x
+end
+
+function nleaves(x::AbstractNode)
+    isnull(x) && return 0
+    count = 0
+    @inbounds for i in eachindex(x)
+        if isactive(x, i)
+            child = unsafe_getindex(x, i)
+            count += nleaves(child)
+        end
+    end
+    count
 end
 
 

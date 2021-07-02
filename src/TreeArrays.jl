@@ -4,6 +4,7 @@ using Base: @_inline_meta, @_propagate_inbounds_meta, @pure
 
 using StaticArrays
 using Coordinates
+using OrderedCollections
 
 export
     TreeSize,
@@ -12,6 +13,7 @@ export
     TreeCartesianIndex,
     LeafNode,
     Node,
+    HashNode,
     TreeView,
     ContinuousView,
     SpotView,
@@ -26,6 +28,7 @@ include("AbstractNode.jl")
 include("TreeIndex.jl")
 include("LeafNode.jl")
 include("Node.jl")
+include("HashNode.jl")
 include("TreeView.jl")
 include("ContinuousView.jl")
 include("iterators.jl")

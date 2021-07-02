@@ -48,16 +48,6 @@ end
     x
 end
 
-@inline function unsafe_getindex(x::Node, i::Int)
-    @boundscheck checkbounds(x, i)
-    @inbounds unsafe_getindex(x.data, i)
-end
-
-@inline function unsafe_setindex!(x::Node, v, i::Int)
-    @boundscheck checkbounds(x, i)
-    @inbounds unsafe_setindex!(x.data, v, i)
-end
-
 @inline function deactivate!(x::Node)
     isnull(x) && return x
     fillmask!(x, false)
@@ -87,30 +77,4 @@ function allocate!(x::Node{T}, i...) where {T}
         end
     end
     childnode
-end
-
-function cleanup!(x::Node)
-    @inbounds for i in eachindex(x)
-        if isactive(x, i)
-            # if `i` is active, then child node is always not null
-            childnode = unsafe_getindex(x, i)
-            cleanup!(childnode)
-            !anyactive(childnode) && delete!(x, i)
-        else
-            delete!(x, i)
-        end
-    end
-    x
-end
-
-function nleaves(x::Node)
-    isnull(x) && return 0
-    count = 0
-    @inbounds for i in eachindex(x)
-        if isactive(x, i)
-            child = unsafe_getindex(x, i)
-            count += nleaves(child)
-        end
-    end
-    count
 end
