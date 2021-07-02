@@ -114,12 +114,19 @@ function Base.fill!(x::TreeView, ::Nothing)
     if length(x) > THREADS_THRESHOLD
         fillmask!(node, false)
         Threads.@threads for i in eachindex(node)
-            @inbounds deactivate!(unsafe_getindex(node, i))
+            @inbounds deactivate!(node[i])
         end
     else
         deactivate!(node)
     end
     x
+end
+
+function Base.fill!(A::SubArray{<: Any, <: Any, <: TreeView}, ::Nothing)
+    for I in eachindex(A)
+        @inbounds A[I] = nothing
+    end
+    A
 end
 
 function nleaves(x::TreeView)
