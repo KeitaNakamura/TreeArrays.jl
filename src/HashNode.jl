@@ -73,3 +73,5 @@ function allocate!(x::HashNode{T}, i) where {T}
     end
     childnode
 end
+
+isallocated(x::HashNode, i::Int) = haskey(x.data, i)

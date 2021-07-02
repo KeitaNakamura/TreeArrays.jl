@@ -78,3 +78,5 @@ function allocate!(x::Node{T}, i...) where {T}
     end
     childnode
 end
+
+isallocated(x::Node, i::Int) = unsafe_getindex(x, i) !== null(childtype(x))
