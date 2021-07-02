@@ -4,7 +4,6 @@ using Base: @_inline_meta, @_propagate_inbounds_meta, @pure
 
 using StaticArrays
 using Coordinates
-using OrderedCollections
 
 export
     TreeSize,

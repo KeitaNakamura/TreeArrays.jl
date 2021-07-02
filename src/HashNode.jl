@@ -23,7 +23,7 @@ Base.IndexStyle(::Type{<: HashNode}) = IndexLinear()
     # so trying to return stored data
     # in this case, need to handle stored data very carefully because
     # we can change its data unexpectedly even if the mask is false
-    haskey(x.data, i) ? unsafe_getindex(x, i) : null(childtype(x))
+    get(x.data, i, null(childtype(x)))
 end
 
 @inline function Base.setindex!(x::HashNode, v, i::Int)

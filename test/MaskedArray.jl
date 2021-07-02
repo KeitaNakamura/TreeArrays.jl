@@ -17,7 +17,11 @@
             # setindex nothing
             x[1] = nothing
             @test TreeArrays.isactive(x, 1) == false
-            @test x.data[1] == 2 # still value is not changed
+            if x isa TreeArrays.MaskedArray
+                @test x.data[1] == 2 # still value is not changed
+            else
+                @test x.data[TreeArrays.FastHashInt(1)] == 2 # still value is not changed
+            end
 
             # countmask/fillmask!
             TreeArrays.fillmask!(x, true)
