@@ -1,7 +1,7 @@
 @testset "Node/HashNode" begin
     for NodeType in (Node{LeafNode{Float64, 2, 2}, 2, 2},
                      HashNode{LeafNode{Float64, 2, 2}, 2, 2})
-        node = NodeType()
+        node = @inferred NodeType()
         @test TreeArrays.childtype(node) == LeafNode{Float64, 2, 2}
         @test TreeArrays.leaftype(node) == LeafNode{Float64, 2, 2}
         @test TreeArrays.leafeltype(node) == Float64

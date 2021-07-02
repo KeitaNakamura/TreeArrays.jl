@@ -5,4 +5,5 @@ using TreeArrays: isactive, isallocated
 
 include("utils.jl")
 include("MaskedArray.jl")
+include("LeafNode.jl")
 include("inner_nodes.jl")
