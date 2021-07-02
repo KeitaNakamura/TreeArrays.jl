@@ -68,8 +68,8 @@ function allocate!(x::HashNode{T}, i) where {T}
             childnode = unsafe_getindex(x, i)
         else
             childnode = T()
-            x[i] = childnode # activated in setindex!
         end
+        x[i] = childnode # activated in setindex!
     end
     childnode
 end

@@ -57,12 +57,12 @@ end
     x
 end
 
-function Base.delete!(x::Node, i...)
-    @boundscheck checkbounds(x, i...)
+function Base.delete!(x::Node, i)
+    @boundscheck checkbounds(x, i)
     @inbounds begin
         # only this case allows to set null node in `x`
         x.data[i] = nothing # make mask false
-        unsafe_setindex!(x, null(childtype(x)), i...)
+        unsafe_setindex!(x, null(childtype(x)), i)
     end
     x
 end
@@ -73,8 +73,8 @@ function allocate!(x::Node{T}, i...) where {T}
         childnode = unsafe_getindex(x, i...)
         if isnull(childnode) # && !isactive(x, i)
             childnode = T()
-            x[i...] = childnode # activated in setindex!
         end
+        x[i...] = childnode # activated in setindex!
     end
     childnode
 end

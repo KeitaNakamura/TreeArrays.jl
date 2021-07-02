@@ -62,6 +62,8 @@ end
     mask = fill!(similar(data, Bool), false)
     MaskedArray(data, mask)
 end
+@inline MaskedArray{T}(u::UndefInitializer, dims::Vararg{Int, N}) where {T, N} =
+    MaskedArray{T}(u, dims)
 @inline function MaskedArray(data::Array)
     mask = fill!(similar(data, Bool), false)
     MaskedArray(data, mask)
@@ -82,6 +84,8 @@ end
     mask = fill!(Array{Bool}(undef, dims), false)
     HashMaskedArray(data, mask, dims)
 end
+@inline HashMaskedArray{T}(u::UndefInitializer, dims::Vararg{Int, N}) where {T, N} =
+    HashMaskedArray{T}(u, dims)
 
 Base.IndexStyle(::Type{<: HashMaskedArray}) = IndexLinear()
 Base.size(x::HashMaskedArray) = x.dims
