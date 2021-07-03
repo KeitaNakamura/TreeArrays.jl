@@ -10,10 +10,6 @@ function Node{T, N, p}() where {T, N, p}
     Node{T, N, p}(data)
 end
 
-@pure childtype(::Type{<: Node{T}}) where {T} = T
-@pure leaftype(::Type{<: Node{T}}) where {T} = leaftype(T)
-@pure leafeltype(::Type{<: Node{T}}) where {T} = leafeltype(T)
-
 Base.size(x::Node) = size(typeof(x))
 Base.IndexStyle(::Type{<: Node}) = IndexLinear()
 

@@ -10,10 +10,6 @@ function HashNode{T, N, p}() where {T, N, p}
     HashNode{T, N, p}(data)
 end
 
-@pure childtype(::Type{<: HashNode{T}}) where {T} = T
-@pure leaftype(::Type{<: HashNode{T}}) where {T} = leaftype(T)
-@pure leafeltype(::Type{<: HashNode{T}}) where {T} = leafeltype(T)
-
 Base.size(x::HashNode) = size(typeof(x))
 Base.IndexStyle(::Type{<: HashNode}) = IndexLinear()
 

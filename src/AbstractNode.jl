@@ -2,12 +2,23 @@ abstract type AbstractNode{T, N, p} <: AbstractArray{T, N} end
 
 @pure Base.size(::Type{Tnode}) where {Tnode <: AbstractNode} = convert.(Int, TreeSize(Tnode)[1])
 
+# null
 @pure null(::Type{Tnode}) where {Tnode <: AbstractNode} = Tnode(nothing)
 null(x::AbstractNode) = null(typeof(x))
 isnull(x::AbstractNode) = x === null(x)
 
+# childtype
+@pure childtype(::Type{<: AbstractNode}) = nothing
+@pure childtype(::Type{<: AbstractNode{T}}) where {T <: AbstractNode} = T
 childtype(x::AbstractNode) = childtype(typeof(x))
+
+# leaftype
+@pure leaftype(T::Type{<: AbstractNode}) = T
+@pure leaftype(::Type{<: AbstractNode{T}}) where {T <: AbstractNode} = leaftype(T)
 leaftype(x::AbstractNode) = leaftype(typeof(x))
+
+# leafeltype
+@pure leafeltype(T::Type{<: AbstractNode}) = eltype(leaftype(T))
 leafeltype(x::AbstractNode) = leafeltype(typeof(x))
 
 isactive(x::AbstractNode, i...) = (@_propagate_inbounds_meta; isnull(x) ? false : isactive(x.data, i...))
