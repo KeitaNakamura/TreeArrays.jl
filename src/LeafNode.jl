@@ -25,11 +25,11 @@ end
 end
 
 @inline function deactivate!(x::LeafNode)
-    isnull(x) || fillmask!(x, false)
+    isnull(x) || fill!(getmask(x), false)
     x
 end
 
 allocate!(x::LeafNode, i) = x
 cleanup!(x::LeafNode) = x
 
-nleaves(x::LeafNode) = countmask(x.data)
+nleaves(x::LeafNode) = count(getmask(x))

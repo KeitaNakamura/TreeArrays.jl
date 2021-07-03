@@ -47,7 +47,7 @@ end
 
 @inline function deactivate!(x::Node)
     isnull(x) && return x
-    fillmask!(x, false)
+    fill!(getmask(x), false)
     for i in eachindex(x)
         @inbounds deactivate!(unsafe_getindex(x, i))
     end

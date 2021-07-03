@@ -112,7 +112,7 @@ function Base.fill!(x::TreeView, ::Nothing)
     node = x.rootnode
     isnull(node) && return x
     if length(x) > THREADS_THRESHOLD
-        fillmask!(node, false)
+        fill!(getmask(node), false)
         Threads.@threads for i in eachindex(node)
             @inbounds deactivate!(node[i])
         end

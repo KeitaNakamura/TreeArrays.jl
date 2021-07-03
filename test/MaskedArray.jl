@@ -22,12 +22,6 @@
             else
                 @test x.data[TreeArrays.FastHashInt(1)] == 2 # still value is not changed
             end
-
-            # countmask/fillmask!
-            TreeArrays.fillmask!(x, true)
-            @test all(x.mask)
-            x[end] = nothing
-            @test TreeArrays.countmask(x) == count(x.mask)
         end
     end
 end

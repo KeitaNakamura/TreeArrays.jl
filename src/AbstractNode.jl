@@ -25,7 +25,7 @@ isactive(x::AbstractNode, i...) = (@_propagate_inbounds_meta; isnull(x) ? false 
 allactive(x::AbstractNode) = allactive(x.data)
 anyactive(x::AbstractNode) = anyactive(x.data)
 
-fillmask!(x::AbstractNode, v) = fillmask!(x.data, v)
+getmask(x::AbstractNode) = getmask(x.data)
 
 @inline function Base.getindex(x::AbstractNode, i::Int...)
     @boundscheck checkbounds(x, i...)

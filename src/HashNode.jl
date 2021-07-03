@@ -43,7 +43,7 @@ end
 
 @inline function deactivate!(x::HashNode)
     isnull(x) && return x
-    fillmask!(x, false)
+    fill!(getmask(x), false)
     foreach(deactivate!, values(x.data))
     x
 end
