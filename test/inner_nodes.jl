@@ -28,7 +28,7 @@
         TreeArrays.allocate!(node, 1)
         @test isactive(node, 1) == true
         @test isallocated(node, 1) == true
-        @test !TreeArrays.anyactive(node[1])              # child is still deactivated
+        @test !any(TreeArrays.getmask(node[1]))           # child is still deactivated
         @test TreeArrays.unsafe_getindex(node[1], 1) == 3 # but the value is not changed
         node[1][1] = 3
         @test TreeArrays.isactive(node[1], 1)
@@ -45,10 +45,10 @@
 
         # deactivate!
         TreeArrays.deactivate!(node)
-        @test !TreeArrays.anyactive(node)
+        @test !any(TreeArrays.getmask(node))
         # children are also deactivated
-        @test !TreeArrays.anyactive(TreeArrays.unsafe_getindex(node, 1))
-        @test !TreeArrays.anyactive(TreeArrays.unsafe_getindex(node, 3))
+        @test !any(TreeArrays.getmask(TreeArrays.unsafe_getindex(node, 1)))
+        @test !any(TreeArrays.getmask(TreeArrays.unsafe_getindex(node, 3)))
         # but still allocated
         @test isallocated(node, 1) == true
         @test isallocated(node, 3) == true

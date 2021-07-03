@@ -1,11 +1,7 @@
 abstract type AbstractMaskedArray{T, N} <: AbstractArray{T, N} end
 
-@inline Base.isassigned(x::AbstractMaskedArray, i::Int...) = (@_propagate_inbounds_meta; isactive(x, i...))
-@inline isactive(x::AbstractMaskedArray, i::Int...) = (@_propagate_inbounds_meta; x.mask[i...])
-allactive(x::AbstractMaskedArray) = all(x.mask)
-anyactive(x::AbstractMaskedArray) = any(x.mask)
-
-@inline checkmask(::Type{Bool}, x::AbstractMaskedArray, i::Int...) = (@_propagate_inbounds_meta; isactive(x, i...)) # checkbounds as well
+@inline isactive(x::AbstractMaskedArray, i::Int...) = (@_propagate_inbounds_meta; getmask(x)[i...])
+@inline checkmask(::Type{Bool}, x::AbstractMaskedArray, i::Int...) = (@_propagate_inbounds_meta; getmask(x)[i...]) # checkbounds as well
 @inline checkmask(x::AbstractMaskedArray, i::Int...) = (@_propagate_inbounds_meta; checkmask(Bool, x, i...) || throw(UndefRefError()))
 
 @inline function Base.getindex(x::AbstractMaskedArray, i::Int)

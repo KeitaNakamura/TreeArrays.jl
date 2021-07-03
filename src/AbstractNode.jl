@@ -21,11 +21,8 @@ leaftype(x::AbstractNode) = leaftype(typeof(x))
 @pure leafeltype(T::Type{<: AbstractNode}) = eltype(leaftype(T))
 leafeltype(x::AbstractNode) = leafeltype(typeof(x))
 
-isactive(x::AbstractNode, i...) = (@_propagate_inbounds_meta; isnull(x) ? false : isactive(x.data, i...))
-allactive(x::AbstractNode) = allactive(x.data)
-anyactive(x::AbstractNode) = anyactive(x.data)
-
 getmask(x::AbstractNode) = getmask(x.data)
+isactive(x::AbstractNode, i...) = (@_propagate_inbounds_meta; isnull(x) ? false : getmask(x)[i...])
 
 @inline function Base.getindex(x::AbstractNode, i::Int...)
     @boundscheck checkbounds(x, i...)
@@ -63,7 +60,7 @@ function cleanup!(x::AbstractNode)
             # if `i` is active, then child node is always not null
             childnode = unsafe_getindex(x, i)
             cleanup!(childnode)
-            !anyactive(childnode) && delete!(x, i)
+            !any(getmask(childnode)) && delete!(x, i)
         else
             delete!(x, i)
         end

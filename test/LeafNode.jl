@@ -13,7 +13,7 @@
 
     # deactivate!
     TreeArrays.deactivate!(node)
-    @test TreeArrays.anyactive(node) == false
+    @test any(TreeArrays.getmask(node)) == false
     @test TreeArrays.unsafe_getindex(node, 1) == 2
     @test TreeArrays.unsafe_getindex(node, 3) == 4
 end
