@@ -3,7 +3,7 @@ abstract type AbstractNode{T, N, p} <: AbstractArray{T, N} end
 @pure Base.size(::Type{Tnode}) where {Tnode <: AbstractNode} = convert.(Int, TreeSize(Tnode)[1])
 
 # null
-@pure null(::Type{Tnode}) where {Tnode <: AbstractNode} = Tnode(nothing)
+@pure null(::Type{Tnode}) where {Tnode <: AbstractNode} = Tnode(undef)
 null(x::AbstractNode) = null(typeof(x))
 isnull(x::AbstractNode) = x === null(x)
 

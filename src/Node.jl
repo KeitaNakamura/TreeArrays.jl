@@ -1,7 +1,7 @@
 struct Node{T <: AbstractNode, N, p} <: AbstractNode{T, N, p}
     data::MaskedArray{T, N}
     Node{T, N, p}(data) where {T, N, p} = new(data)
-    Node{T, N, p}(::Nothing) where {T, N, p} = new()
+    Node{T, N, p}(::UndefInitializer) where {T, N, p} = new()
 end
 
 function Node{T, N, p}() where {T, N, p}

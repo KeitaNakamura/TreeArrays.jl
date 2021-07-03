@@ -1,7 +1,7 @@
 struct HashNode{T <: AbstractNode, N, p} <: AbstractNode{T, N, p}
     data::HashMaskedArray{T, N}
     HashNode{T, N, p}(data) where {T, N, p} = new(data)
-    HashNode{T, N, p}(::Nothing) where {T, N, p} = new()
+    HashNode{T, N, p}(::UndefInitializer) where {T, N, p} = new()
 end
 
 function HashNode{T, N, p}() where {T, N, p}
