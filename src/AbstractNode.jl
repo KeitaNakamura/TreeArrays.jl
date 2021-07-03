@@ -3,7 +3,7 @@ abstract type AbstractNode{T, N, p} <: AbstractArray{T, N} end
 @pure Base.length(::Type{T}) where {T <: AbstractNode} = prod(size(T))
 @pure Base.size(::Type{Tnode}) where {Tnode <: AbstractNode} = convert.(Int, TreeSize(Tnode)[1])
 
-Base.length(x::AbstractNode) = length(typeof(x))
+Base.length(x::AbstractNode) = prod(size(x))
 Base.size(x::AbstractNode) = size(typeof(x))
 
 @pure null(::Type{Tnode}) where {Tnode <: AbstractNode} = Tnode(nothing)
@@ -22,12 +22,12 @@ fillmask!(x::AbstractNode, v) = fillmask!(x.data, v)
 
 @inline function Base.getindex(x::AbstractNode, i::Int...)
     @boundscheck checkbounds(x, i...)
-    @inbounds x[Base._sub2ind(TreeSize(x)[1], i...)]
+    @inbounds x[Base._sub2ind(size(x), i...)]
 end
 
 @inline function Base.setindex!(x::AbstractNode, v, i::Int...)
     @boundscheck checkbounds(x, i...)
-    @inbounds x[Base._sub2ind(TreeSize(x)[1], i...)] = v
+    @inbounds x[Base._sub2ind(size(x), i...)] = v
 end
 
 @inline function unsafe_getindex(x::AbstractNode, i::Int)
@@ -42,12 +42,12 @@ end
 
 @inline function unsafe_getindex(x::AbstractNode, i::Int...)
     @boundscheck checkbounds(x, i...)
-    @inbounds unsafe_getindex(x, Base._sub2ind(TreeSize(x)[1], i...))
+    @inbounds unsafe_getindex(x, Base._sub2ind(size(x), i...))
 end
 
 @inline function unsafe_setindex!(x::AbstractNode, v, i::Int...)
     @boundscheck checkbounds(x, i...)
-    @inbounds unsafe_setindex!(x, v, Base._sub2ind(TreeSize(x)[1], i...))
+    @inbounds unsafe_setindex!(x, v, Base._sub2ind(size(x), i...))
 end
 
 function cleanup!(x::AbstractNode)
