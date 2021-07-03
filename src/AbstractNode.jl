@@ -24,16 +24,6 @@ leafeltype(x::AbstractNode) = leafeltype(typeof(x))
 getmask(x::AbstractNode) = getmask(x.data)
 isactive(x::AbstractNode, i...) = (@_propagate_inbounds_meta; isnull(x) ? false : getmask(x)[i...])
 
-@inline function Base.getindex(x::AbstractNode, i::Int...)
-    @boundscheck checkbounds(x, i...)
-    @inbounds x[Base._sub2ind(size(x), i...)]
-end
-
-@inline function Base.setindex!(x::AbstractNode, v, i::Int...)
-    @boundscheck checkbounds(x, i...)
-    @inbounds x[Base._sub2ind(size(x), i...)] = v
-end
-
 @inline function unsafe_getindex(x::AbstractNode, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds unsafe_getindex(x.data, i)
