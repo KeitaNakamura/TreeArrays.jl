@@ -14,6 +14,7 @@ end
 @pure leaftype(::Type{<: HashNode{T}}) where {T} = leaftype(T)
 @pure leafeltype(::Type{<: HashNode{T}}) where {T} = leafeltype(T)
 
+Base.size(x::HashNode) = size(typeof(x))
 Base.IndexStyle(::Type{<: HashNode}) = IndexLinear()
 
 @inline function Base.getindex(x::HashNode, i::Int)
