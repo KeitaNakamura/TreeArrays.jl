@@ -1,7 +1,8 @@
-@testset "Node/HashNode/DynamicNode" begin
+@testset "Node/HashNode/DynamicNode/DynamicHashNode" begin
     for node in (Node{LeafNode{Float64, 2, 2}, 2, 2}(),
                  HashNode{LeafNode{Float64, 2, 2}, 2, 2}(),
-                 DynamicNode{LeafNode{Float64, 2, 2}, 2}(4, 4))
+                 DynamicNode{LeafNode{Float64, 2, 2}, 2}(4, 4),
+                 DynamicHashNode{LeafNode{Float64, 2, 2}, 2}(4, 4))
         @test TreeArrays.childtype(node) == LeafNode{Float64, 2, 2}
         @test TreeArrays.leaftype(node) == LeafNode{Float64, 2, 2}
         @test TreeArrays.leafeltype(node) == Float64

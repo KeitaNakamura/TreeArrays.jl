@@ -1,19 +1,8 @@
-struct HashNode{T <: AbstractNode, N, p} <: AbstractNode{T, N, p}
-    data::HashMaskedArray{T, N}
-    HashNode{T, N, p}(data) where {T, N, p} = new(data)
-    HashNode{T, N, p}(::UndefInitializer) where {T, N, p} = new()
-end
+abstract type AbstractHashNode{T, N, p} <: AbstractNode{T, N, p} end
 
-function HashNode{T, N, p}() where {T, N, p}
-    dims = size(HashNode{T, N, p})
-    data = HashMaskedArray{T}(undef, dims)
-    HashNode{T, N, p}(data)
-end
+Base.IndexStyle(::Type{<: AbstractHashNode}) = IndexLinear()
 
-Base.size(x::HashNode) = size(typeof(x))
-Base.IndexStyle(::Type{<: HashNode}) = IndexLinear()
-
-@inline function Base.getindex(x::HashNode, i::Int)
+@inline function Base.getindex(x::AbstractHashNode, i::Int)
     @boundscheck checkbounds(x, i)
     isnull(x) && return null(childtype(x))
     # data can haskey even if the mask is false
@@ -23,14 +12,14 @@ Base.IndexStyle(::Type{<: HashNode}) = IndexLinear()
     get(x.data, i, null(childtype(x)))
 end
 
-@inline function Base.setindex!(x::HashNode, v, i::Int)
+@inline function Base.setindex!(x::AbstractHashNode, v, i::Int)
     @boundscheck checkbounds(x, i)
     isnull(v) && throw(ArgumentError("trying to set null node, call `delete!(node, i)` instead"))
     @inbounds x.data[i] = v
     x
 end
 
-@inline function Base.setindex!(x::HashNode, ::Nothing, i::Int)
+@inline function Base.setindex!(x::AbstractHashNode, ::Nothing, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds begin
         if isactive(x, i)
@@ -41,14 +30,14 @@ end
     x
 end
 
-@inline function deactivate!(x::HashNode)
+@inline function deactivate!(x::AbstractHashNode)
     isnull(x) && return x
     fill!(getmask(x), false)
     foreach(deactivate!, values(x.data))
     x
 end
 
-function Base.delete!(x::HashNode, i)
+function Base.delete!(x::AbstractHashNode, i)
     @boundscheck checkbounds(x, i)
     @inbounds begin
         # only this case allows to set null node in `x`
@@ -58,7 +47,7 @@ function Base.delete!(x::HashNode, i)
     x
 end
 
-function allocate!(x::HashNode{T}, i) where {T}
+function allocate!(x::AbstractHashNode{T}, i) where {T}
     @boundscheck checkbounds(x, i)
     @inbounds begin
         if haskey(x.data, i)
@@ -71,4 +60,33 @@ function allocate!(x::HashNode{T}, i) where {T}
     childnode
 end
 
-isallocated(x::HashNode, i::Int) = haskey(x.data, i)
+isallocated(x::AbstractHashNode, i::Int) = haskey(x.data, i)
+
+struct HashNode{T <: AbstractNode, N, p} <: AbstractHashNode{T, N, p}
+    data::HashMaskedArray{T, N}
+    HashNode{T, N, p}(data) where {T, N, p} = new(data)
+    HashNode{T, N, p}(::UndefInitializer) where {T, N, p} = new()
+end
+
+function HashNode{T, N, p}() where {T, N, p}
+    dims = size(HashNode{T, N, p})
+    data = HashMaskedArray{T}(undef, dims)
+    HashNode{T, N, p}(data)
+end
+
+Base.size(x::HashNode) = size(typeof(x))
+
+
+struct DynamicHashNode{T <: AbstractNode, N} <: AbstractHashNode{T, N, Dynamic()}
+    data::HashMaskedArray{T, N}
+    dims::NTuple{N, Int}
+    DynamicHashNode{T, N}(data, dims) where {T, N} = new(data, dims)
+    DynamicHashNode{T, N}(::UndefInitializer) where {T, N} = new()
+end
+
+function DynamicHashNode{T, N}(dims::Int...) where {T, N}
+    data = HashMaskedArray{T}(undef, dims)
+    DynamicHashNode{T, N}(data, dims)
+end
+
+Base.size(x::DynamicHashNode) = x.dims

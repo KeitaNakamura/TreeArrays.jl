@@ -13,6 +13,7 @@ export
     LeafNode,
     Node,
     DynamicNode,
+    DynamicHashNode,
     HashNode,
     TreeView,
     ContinuousView,

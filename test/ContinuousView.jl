@@ -1,7 +1,8 @@
 @testset "ContinuousView" begin
     for node in (Node{Node{LeafNode{Float64, 2, 2}, 2, 3}, 2, 3}(),
                  HashNode{Node{LeafNode{Float64, 2, 2}, 2, 3}, 2, 3}(),
-                 DynamicNode{Node{LeafNode{Float64, 2, 2}, 2, 3}, 2}(8,8))
+                 DynamicNode{Node{LeafNode{Float64, 2, 2}, 2, 3}, 2}(8,8),
+                 DynamicHashNode{Node{LeafNode{Float64, 2, 2}, 2, 3}, 2}(8,8))
         A = TreeView(node)
 
         v = ContinuousView(A, 11:30, 41:70)

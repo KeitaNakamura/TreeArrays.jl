@@ -32,7 +32,7 @@ end
 # TreeLinearIndex
 @inline TreeLinearIndex(S::TreeSize, i::Integer...) = TreeLinearIndex(compute_offsets(offset_linear, S, i...))
 @inline TreeLinearIndex(node::Union{Node, HashNode}, inds::Integer...) = TreeLinearIndex(TreeSize(node), inds...)
-function TreeLinearIndex(node::DynamicNode, inds::Integer...)
+function TreeLinearIndex(node::Union{DynamicNode, DynamicHashNode}, inds::Integer...)
     t_child = childtype(node)
     tsize_child = TreeSize(t_child)
     i = Base._sub2ind(size(node), block_index(totalsize(tsize_child), inds...)...)
@@ -53,7 +53,7 @@ TreeCartesianIndex(I::CartesianIndex...) = TreeCartesianIndex(I)
     CartesianIndex(block_index(dims_child, (@. rem(I - 1, dims) + 1)...))
 end
 @inline offset_cartesian(node::Union{Node, HashNode}, I::Integer...) = offset_cartesian(TreeSize(node), I...)
-@inline function offset_cartesian(node::DynamicNode, I::Integer...)
+@inline function offset_cartesian(node::Union{DynamicNode, DynamicHashNode}, I::Integer...)
     @boundscheck checkbounds(CartesianIndices(totalsize(node)), I...)
     dims_child = totalsize(Base.tail(TreeSize(node)))
     CartesianIndex(block_index(dims_child, I...))
@@ -62,7 +62,7 @@ end
 # TreeCartesianIndex
 @inline TreeCartesianIndex(S::TreeSize, i::Integer...) = TreeCartesianIndex(compute_offsets(offset_cartesian, S, i...))
 @inline TreeCartesianIndex(node::Union{Node, HashNode}, inds::Integer...) = TreeCartesianIndex(TreeSize(node), inds...)
-function TreeCartesianIndex(node::DynamicNode, inds::Integer...)
+function TreeCartesianIndex(node::Union{DynamicNode, DynamicHashNode}, inds::Integer...)
     t_child = childtype(node)
     tsize_child = TreeSize(t_child)
     i = CartesianIndex(block_index(totalsize(tsize_child), inds...))
@@ -75,7 +75,7 @@ end
 function totalsize(node::Union{Node, HashNode})
     convert.(Int, totalsize(TreeSize(node)))
 end
-function totalsize(node::DynamicNode)
+function totalsize(node::Union{DynamicNode, DynamicHashNode})
     dims = size(node) # don't statically get size to handle the case that rootnode is dynamic node
     dims_child = totalsize(TreeSize(childtype(node)))
     dims .* dims_child

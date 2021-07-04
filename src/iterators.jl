@@ -20,9 +20,9 @@ end
     end
 end
 
-#############################
-# Node/HashNode/DynamicNode #
-#############################
+#############################################
+# Node/HashNode/DynamicNode/DynamicHashNode #
+#############################################
 
 @inline function _eachleaf!(f, node, i)
     @_propagate_inbounds_meta
@@ -30,12 +30,12 @@ end
         eachleaf!(f, unsafe_getindex(node, i))
     end
 end
-function eachleaf!(f, node::Union{Node, HashNode, DynamicNode})
+function eachleaf!(f, node::Union{Node, HashNode, DynamicNode, DynamicHashNode})
     for i in eachindex(node)
         @inbounds _eachleaf!(f, node, i)
     end
 end
-function eachleaf_threads!(f, node::Union{Node, HashNode, DynamicNode})
+function eachleaf_threads!(f, node::Union{Node, HashNode, DynamicNode, DynamicHashNode})
     Threads.@threads for i in eachindex(node)
         @inbounds _eachleaf!(f, node, i)
     end
@@ -51,7 +51,7 @@ end
         eachleaf!(f, child, (indices ∩ childinds) .- CartesianIndex(offset))
     end
 end
-function eachleaf!(f, node::Union{Node, HashNode, DynamicNode}, indices::CartesianIndices)
+function eachleaf!(f, node::Union{Node, HashNode, DynamicNode, DynamicHashNode}, indices::CartesianIndices)
     @boundscheck checkbounds(TreeView(node), indices)
     start = offset_cartesian(node, Tuple(first(indices))...)
     stop = offset_cartesian(node, Tuple(last(indices))...)
@@ -60,7 +60,7 @@ function eachleaf!(f, node::Union{Node, HashNode, DynamicNode}, indices::Cartesi
         @inbounds _eachleaf!(f, node, I, indices)
     end
 end
-function eachleaf_threads!(f, node::Union{Node, HashNode, DynamicNode}, indices::CartesianIndices) # threads version
+function eachleaf_threads!(f, node::Union{Node, HashNode, DynamicNode, DynamicHashNode}, indices::CartesianIndices) # threads version
     @boundscheck checkbounds(TreeView(node), indices)
     S = TreeSize(node)
     start = offset_cartesian(node, Tuple(first(indices))...)

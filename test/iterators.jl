@@ -5,7 +5,9 @@
                  HashNode{Node{LeafNode{Float64, 2, 3}, 2, 3}, 2, 3}(),
                  HashNode{Node{LeafNode{Float64, 2, 1}, 2, 1}, 2, 1}(),
                  DynamicNode{Node{LeafNode{Float64, 2, 3}, 2, 3}, 2}(8,8),
-                 DynamicNode{Node{LeafNode{Float64, 2, 1}, 2, 1}, 2}(2,2),)
+                 DynamicNode{Node{LeafNode{Float64, 2, 1}, 2, 1}, 2}(2,2),
+                 DynamicHashNode{Node{LeafNode{Float64, 2, 3}, 2, 3}, 2}(8,8),
+                 DynamicHashNode{Node{LeafNode{Float64, 2, 1}, 2, 1}, 2}(2,2),)
         A = TreeView(node)
         A .= 1
 
