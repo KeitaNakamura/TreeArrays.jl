@@ -1,5 +1,13 @@
 @inline nfill(v, n::Val) = ntuple(i -> v, n)
 
+# cartesian
+@inline block_index(child_dims::Tuple, I::Int...) = @. div(I-1, child_dims) + 1
+@inline function block_local_index(child_dims::Tuple, I::Int...)
+    blockindex = block_index(child_dims, I...)
+    localindex = @. I - (blockindex-1) * child_dims
+    blockindex, localindex
+end
+
 
 struct Power2 <: Integer
     n::Int

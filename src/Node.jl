@@ -1,19 +1,8 @@
-struct Node{T <: AbstractNode, N, p} <: AbstractNode{T, N, p}
-    data::MaskedArray{T, N}
-    Node{T, N, p}(data) where {T, N, p} = new(data)
-    Node{T, N, p}(::UndefInitializer) where {T, N, p} = new()
-end
+abstract type DenseNode{T, N, p} <: AbstractNode{T, N, p} end
 
-function Node{T, N, p}() where {T, N, p}
-    dims = size(Node{T, N, p})
-    data = MaskedArray([null(T) for I in CartesianIndices(dims)])
-    Node{T, N, p}(data)
-end
+Base.IndexStyle(::Type{<: DenseNode}) = IndexLinear()
 
-Base.size(x::Node) = size(typeof(x))
-Base.IndexStyle(::Type{<: Node}) = IndexLinear()
-
-@inline function Base.getindex(x::Node, i::Int)
+@inline function Base.getindex(x::DenseNode, i::Int)
     @boundscheck checkbounds(x, i)
     # Sometimes `i` is inactive, but corresponding data is not null
     # because mask is only set to `false` when the entry is deactivated (as long as call `cleanup!`)
@@ -21,7 +10,7 @@ Base.IndexStyle(::Type{<: Node}) = IndexLinear()
     @inbounds isnull(x) ? null(childtype(x)) : unsafe_getindex(x, i)
 end
 
-@inline function Base.setindex!(x::Node, v, i::Int)
+@inline function Base.setindex!(x::DenseNode, v, i::Int)
     @boundscheck checkbounds(x, i)
     # The mask is activated in MaskedArray.
     # Allowing mask to be active only when setting corresponding data.
@@ -32,7 +21,7 @@ end
     x
 end
 
-@inline function Base.setindex!(x::Node, ::Nothing, i::Int)
+@inline function Base.setindex!(x::DenseNode, ::Nothing, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds begin
         # Make mask false at i (don't delete corresponding data)
@@ -45,7 +34,7 @@ end
     x
 end
 
-@inline function deactivate!(x::Node)
+@inline function deactivate!(x::DenseNode)
     isnull(x) && return x
     fill!(getmask(x), false)
     for i in eachindex(x)
@@ -54,7 +43,7 @@ end
     x
 end
 
-function Base.delete!(x::Node, i)
+function Base.delete!(x::DenseNode, i)
     @boundscheck checkbounds(x, i)
     @inbounds begin
         # only this case allows to set null node in `x`
@@ -64,7 +53,7 @@ function Base.delete!(x::Node, i)
     x
 end
 
-function allocate!(x::Node{T}, i...) where {T}
+function allocate!(x::DenseNode{T}, i...) where {T}
     @boundscheck checkbounds(x, i...)
     @inbounds begin
         childnode = unsafe_getindex(x, i...)
@@ -76,4 +65,34 @@ function allocate!(x::Node{T}, i...) where {T}
     childnode
 end
 
-isallocated(x::Node, i::Int) = unsafe_getindex(x, i) !== null(childtype(x))
+isallocated(x::DenseNode, i::Int) = unsafe_getindex(x, i) !== null(childtype(x))
+
+
+struct Node{T <: AbstractNode, N, p} <: DenseNode{T, N, p}
+    data::MaskedArray{T, N}
+    Node{T, N, p}(data) where {T, N, p} = new(data)
+    Node{T, N, p}(::UndefInitializer) where {T, N, p} = new()
+end
+
+function Node{T, N, p}() where {T, N, p}
+    dims = size(Node{T, N, p})
+    data = MaskedArray([null(T) for I in CartesianIndices(dims)])
+    Node{T, N, p}(data)
+end
+
+Base.size(x::Node) = size(typeof(x))
+
+
+struct DynamicNode{T <: AbstractNode, N} <: DenseNode{T, N, Dynamic()}
+    data::MaskedArray{T, N}
+    dims::NTuple{N, Int}
+    DynamicNode{T, N}(data, dims) where {T, N} = new(data, dims)
+    DynamicNode{T, N}(::UndefInitializer) where {T, N} = new()
+end
+
+function DynamicNode{T, N}(dims::Int...) where {T, N}
+    data = MaskedArray([null(T) for I in CartesianIndices(dims)])
+    DynamicNode{T, N}(data, dims)
+end
+
+Base.size(x::DynamicNode) = x.dims

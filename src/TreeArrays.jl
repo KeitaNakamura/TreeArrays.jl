@@ -12,6 +12,7 @@ export
     TreeCartesianIndex,
     LeafNode,
     Node,
+    DynamicNode,
     HashNode,
     TreeView,
     ContinuousView,
@@ -24,10 +25,10 @@ const THREADS_THRESHOLD = 1 << 13
 include("utils.jl")
 include("MaskedArray.jl")
 include("AbstractNode.jl")
-include("TreeIndex.jl")
 include("LeafNode.jl")
 include("Node.jl")
 include("HashNode.jl")
+include("TreeIndex.jl")
 include("TreeView.jl")
 include("ContinuousView.jl")
 include("iterators.jl")

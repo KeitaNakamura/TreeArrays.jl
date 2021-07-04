@@ -1,7 +1,7 @@
 @testset "TreeView" begin
-    for NodeType in (Node{Node{LeafNode{Float64, 2, 1}, 2, 1}, 2, 1},
-                     HashNode{Node{LeafNode{Float64, 2, 1}, 2, 1}, 2, 1})
-        node = NodeType()
+    for node in (Node{Node{LeafNode{Float64, 2, 1}, 2, 1}, 2, 1}(),
+                 HashNode{Node{LeafNode{Float64, 2, 1}, 2, 1}, 2, 1}(),
+                 DynamicNode{Node{LeafNode{Float64, 2, 1}, 2, 1}, 2}(2,2))
         A = TreeView(node)
 
         @test size(A) == (8, 8)
@@ -58,9 +58,9 @@
         @test isallocated(A.rootnode, 4) == false
     end
     @testset "threads computations" begin
-        for NodeType in (Node{Node{LeafNode{Float64, 2, 3}, 2, 3}, 2, 3},
-                         HashNode{Node{LeafNode{Float64, 2, 3}, 2, 3}, 2, 3})
-            node = NodeType()
+        for node in (Node{Node{LeafNode{Float64, 2, 3}, 2, 3}, 2, 3}(),
+                     HashNode{Node{LeafNode{Float64, 2, 3}, 2, 3}, 2, 3}(),
+                     DynamicNode{Node{LeafNode{Float64, 2, 3}, 2, 3}, 2}(8,8))
             n = 2^3 * 2^3 * 2^3
             A = TreeView(node)
             @test size(A) == (n, n)

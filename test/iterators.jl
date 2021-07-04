@@ -1,9 +1,11 @@
 @testset "eachleaf!" begin
-    for NodeType in (Node{Node{LeafNode{Float64, 2, 3}, 2, 3}, 2, 3},
-                     Node{Node{LeafNode{Float64, 2, 1}, 2, 1}, 2, 1},
-                     HashNode{Node{LeafNode{Float64, 2, 3}, 2, 3}, 2, 3},
-                     HashNode{Node{LeafNode{Float64, 2, 1}, 2, 1}, 2, 1},)
-        node = NodeType()
+    # test with/without threads
+    for node in (Node{Node{LeafNode{Float64, 2, 3}, 2, 3}, 2, 3}(),
+                 Node{Node{LeafNode{Float64, 2, 1}, 2, 1}, 2, 1}(),
+                 HashNode{Node{LeafNode{Float64, 2, 3}, 2, 3}, 2, 3}(),
+                 HashNode{Node{LeafNode{Float64, 2, 1}, 2, 1}, 2, 1}(),
+                 DynamicNode{Node{LeafNode{Float64, 2, 3}, 2, 3}, 2}(8,8),
+                 DynamicNode{Node{LeafNode{Float64, 2, 1}, 2, 1}, 2}(2,2),)
         A = TreeView(node)
         A .= 1
 

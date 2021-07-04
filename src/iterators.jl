@@ -20,9 +20,9 @@ end
     end
 end
 
-#################
-# Node/HashNode #
-#################
+#############################
+# Node/HashNode/DynamicNode #
+#############################
 
 @inline function _eachleaf!(f, node, i)
     @_propagate_inbounds_meta
@@ -30,12 +30,12 @@ end
         eachleaf!(f, unsafe_getindex(node, i))
     end
 end
-function eachleaf!(f, node::Union{Node, HashNode})
+function eachleaf!(f, node::Union{Node, HashNode, DynamicNode})
     for i in eachindex(node)
         @inbounds _eachleaf!(f, node, i)
     end
 end
-function eachleaf_threads!(f, node::Union{Node, HashNode})
+function eachleaf_threads!(f, node::Union{Node, HashNode, DynamicNode})
     Threads.@threads for i in eachindex(node)
         @inbounds _eachleaf!(f, node, i)
     end
@@ -51,21 +51,20 @@ end
         eachleaf!(f, child, (indices ∩ childinds) .- CartesianIndex(offset))
     end
 end
-function eachleaf!(f, node::Union{Node, HashNode}, indices::CartesianIndices)
+function eachleaf!(f, node::Union{Node, HashNode, DynamicNode}, indices::CartesianIndices)
     @boundscheck checkbounds(TreeView(node), indices)
-    S = TreeSize(node)
-    start = offset_cartesian(S, Tuple(first(indices))...)
-    stop = offset_cartesian(S, Tuple(last(indices))...)
+    start = offset_cartesian(node, Tuple(first(indices))...)
+    stop = offset_cartesian(node, Tuple(last(indices))...)
     for cartesian in start:stop
         I = Tuple(cartesian)
         @inbounds _eachleaf!(f, node, I, indices)
     end
 end
-function eachleaf_threads!(f, node::Union{Node, HashNode}, indices::CartesianIndices) # threads version
+function eachleaf_threads!(f, node::Union{Node, HashNode, DynamicNode}, indices::CartesianIndices) # threads version
     @boundscheck checkbounds(TreeView(node), indices)
     S = TreeSize(node)
-    start = offset_cartesian(S, Tuple(first(indices))...)
-    stop = offset_cartesian(S, Tuple(last(indices))...)
+    start = offset_cartesian(node, Tuple(first(indices))...)
+    stop = offset_cartesian(node, Tuple(last(indices))...)
     Threads.@threads for cartesian in start:stop
         I = Tuple(cartesian)
         @inbounds _eachleaf!(f, node, I, indices)

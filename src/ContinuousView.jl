@@ -67,14 +67,6 @@ function generateblocks(blockindices, A::TreeView)
     end
 end
 
-# cartesian
-@inline block_index(dims::Tuple, I::Int...) = @. div(I-1, dims) + 1
-@inline function block_local_index(dims::Tuple, I::Int...)
-    blockindex = block_index(dims, I...)
-    localindex = @. I - (blockindex-1) * dims
-    blockindex, localindex
-end
-
 # linear
 @inline function block_index(x::ContinuousView, I::Int...)
     dims = TreeSize(x.parent)[end]

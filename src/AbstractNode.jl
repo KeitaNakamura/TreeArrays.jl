@@ -70,17 +70,20 @@ function nleaves(x::AbstractNode)
     count
 end
 
+struct Dynamic end
 
 struct TreeSize{S}
     function TreeSize{S}() where {S}
-        new{S::Tuple{Vararg{Tuple{Vararg{Integer}}}}}()
+        new{S::Tuple{Vararg{Union{Tuple{Vararg{Integer}}, Dynamic}}}}()
     end
 end
 @pure TreeSize(S::Tuple) = TreeSize{S}()
 @pure Base.Tuple(::TreeSize{S}) where {S} = S
 
+@pure nodesize(::Type{<: AbstractNode{<: Any, <: Any, Dynamic()}}) = Dynamic()
+@pure nodesize(::Type{<: AbstractNode{<: Any, N, p}}) where {N, p} = nfill(Power2(p), Val(N))
 @pure TreeSize(::Nothing) = TreeSize{()}()
-@pure TreeSize(::Type{Tnode}) where {N, p, Tnode <: AbstractNode{<: Any, N, p}} = TreeSize{(nfill(Power2(p), Val(N)), Tuple(TreeSize(childtype(Tnode)))...)}()
+@pure TreeSize(::Type{Tnode}) where {Tnode <: AbstractNode} = TreeSize{(nodesize(Tnode), Tuple(TreeSize(childtype(Tnode)))...)}()
 @pure TreeSize(x::AbstractNode) = TreeSize(typeof(x))
 
 @pure Base.length(::TreeSize{S}) where {S} = length(S)
