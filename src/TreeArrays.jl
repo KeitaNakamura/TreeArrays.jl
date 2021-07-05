@@ -16,6 +16,7 @@ export
     DynamicHashNode,
     HashNode,
     TreeView,
+    TreeArray,
     ContinuousView,
     SpotView,
     eachleaf!,
@@ -31,6 +32,7 @@ include("Node.jl")
 include("HashNode.jl")
 include("TreeIndex.jl")
 include("TreeView.jl")
+include("TreeArray.jl")
 include("ContinuousView.jl")
 include("iterators.jl")
 include("show.jl")

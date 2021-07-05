@@ -1,6 +1,7 @@
 abstract type AbstractNode{T, N, p} <: AbstractArray{T, N} end
 
 @pure Base.size(::Type{Tnode}) where {Tnode <: AbstractNode} = convert.(Int, TreeSize(Tnode)[1])
+@pure totalsize(::Type{Tnode}) where {Tnode <: AbstractNode} = totalsize(TreeSize(Tnode))
 
 # null
 @pure null(::Type{Tnode}) where {Tnode <: AbstractNode} = Tnode(undef)
