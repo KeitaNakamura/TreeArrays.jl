@@ -17,7 +17,7 @@ end
 
 function TreeArray(::Type{Tnode}, dims::Int...) where {Tnode <: Union{DynamicNode, DynamicHashNode}}
     t_child = childtype(Tnode)
-    blockdims = block_index(dims, totalsize(t_child)...) .+ 1
+    blockdims = block_index(totalsize(t_child), dims...)
     tree = TreeView(Tnode(blockdims...))
     TreeArray(tree, dims)
 end
