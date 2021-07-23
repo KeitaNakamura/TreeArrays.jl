@@ -16,4 +16,4 @@ maybewrap(x) = x
 maybewrap(x::CustomShowArrays) = ShowWrapper(x)
 
 Base.summary(io::IO, x::ShowWrapper) = summary(io, x.parent)
-Base.show(io::IO, mime::MIME"text/plain", x::Union{CustomShowArrays}) = show(io, mime, ShowWrapper(x))
+Base.show(io::IO, mime::MIME"text/plain", x::CustomShowArrays) = show(io, mime, ShowWrapper(x))
