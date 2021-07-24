@@ -8,6 +8,8 @@ function TreeView(rootnode::AbstractNode{<: Any, N}) where {N}
 end
 
 Base.size(x::TreeView) = totalsize(x.rootnode)
+leaftype(x::TreeView) = leaftype(x.rootnode)
+leafeltype(x::TreeView) = leafeltype(x.rootnode)
 
 @inline TreeLinearIndex(x::TreeView{<: Any, N}, I::Vararg{Integer, N}) where {N} = TreeLinearIndex(x.rootnode, I...)
 @inline TreeCartesianIndex(x::TreeView{<: Any, N}, I::Vararg{Integer, N}) where {N} = TreeCartesianIndex(x.rootnode, I...)

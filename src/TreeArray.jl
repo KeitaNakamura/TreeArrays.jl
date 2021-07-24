@@ -23,6 +23,8 @@ function TreeArray(::Type{Tnode}, dims::Int...) where {Tnode <: Union{DynamicNod
 end
 
 Base.size(x::TreeArray) = x.dims
+leaftype(x::TreeArray) = leaftype(x.tree)
+leafeltype(x::TreeArray) = leafeltype(x.tree)
 
 @inline function Base.getindex(x::TreeArray{<: Any, N}, i::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(x, i...)
