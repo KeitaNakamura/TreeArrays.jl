@@ -22,6 +22,10 @@ function TreeArray(::Type{Tnode}, dims::Int...) where {Tnode <: Union{DynamicNod
     TreeArray(tree, dims)
 end
 
+function TreeArray{T}(dims::Vararg{Int, N}) where {T, N}
+    TreeArray(DynamicNode{Node{LeafNode{T, N, 3}, N, 4}, N}, dims...)
+end
+
 Base.size(x::TreeArray) = x.dims
 leaftype(x::TreeArray) = leaftype(x.tree)
 leafeltype(x::TreeArray) = leafeltype(x.tree)
