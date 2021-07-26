@@ -63,14 +63,14 @@ end
 isallocated(x::AbstractHashNode, i::Int) = haskey(x.data, i)
 
 struct HashNode{T <: AbstractNode, N, p} <: AbstractHashNode{T, N, p}
-    data::HashMaskedArray{T, N}
+    data::MaskedHashArray{T, N}
     HashNode{T, N, p}(data) where {T, N, p} = new(data)
     HashNode{T, N, p}(::UndefInitializer) where {T, N, p} = new()
 end
 
 function HashNode{T, N, p}() where {T, N, p}
     dims = size(HashNode{T, N, p})
-    data = HashMaskedArray{T}(undef, dims)
+    data = MaskedHashArray{T}(undef, dims)
     HashNode{T, N, p}(data)
 end
 
@@ -78,14 +78,14 @@ Base.size(x::HashNode) = size(typeof(x))
 
 
 struct DynamicHashNode{T <: AbstractNode, N} <: AbstractHashNode{T, N, Dynamic()}
-    data::HashMaskedArray{T, N}
+    data::MaskedHashArray{T, N}
     dims::NTuple{N, Int}
     DynamicHashNode{T, N}(data, dims) where {T, N} = new(data, dims)
     DynamicHashNode{T, N}(::UndefInitializer) where {T, N} = new()
 end
 
 function DynamicHashNode{T, N}(dims::Int...) where {T, N}
-    data = HashMaskedArray{T}(undef, dims)
+    data = MaskedHashArray{T}(undef, dims)
     DynamicHashNode{T, N}(data, dims)
 end
 

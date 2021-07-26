@@ -1,10 +1,10 @@
-abstract type AbstractMaskedArray{T, N} <: AbstractArray{T, N} end
+abstract type MaskedArray{T, N} <: AbstractArray{T, N} end
 
-@inline isactive(x::AbstractMaskedArray, i::Int...) = (@_propagate_inbounds_meta; getmask(x)[i...])
-@inline checkmask(::Type{Bool}, x::AbstractMaskedArray, i::Int...) = (@_propagate_inbounds_meta; getmask(x)[i...]) # checkbounds as well
-@inline checkmask(x::AbstractMaskedArray, i::Int...) = (@_propagate_inbounds_meta; checkmask(Bool, x, i...) || throw(UndefRefError()))
+@inline isactive(x::MaskedArray, i::Int...) = (@_propagate_inbounds_meta; getmask(x)[i...])
+@inline checkmask(::Type{Bool}, x::MaskedArray, i::Int...) = (@_propagate_inbounds_meta; getmask(x)[i...]) # checkbounds as well
+@inline checkmask(x::MaskedArray, i::Int...) = (@_propagate_inbounds_meta; checkmask(Bool, x, i...) || throw(UndefRefError()))
 
-@inline function Base.getindex(x::AbstractMaskedArray, i::Int)
+@inline function Base.getindex(x::MaskedArray, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds begin
         checkmask(x, i)
@@ -12,7 +12,7 @@ abstract type AbstractMaskedArray{T, N} <: AbstractArray{T, N} end
     end
 end
 
-@inline function Base.setindex!(x::AbstractMaskedArray, v, i::Int)
+@inline function Base.setindex!(x::MaskedArray, v, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds begin
         x.data[i] = v
@@ -21,51 +21,51 @@ end
     x
 end
 
-@inline function Base.setindex!(x::AbstractMaskedArray, ::Nothing, i::Int)
+@inline function Base.setindex!(x::MaskedArray, ::Nothing, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds x.mask[i] = false
     x
 end
 
-@inline function unsafe_getindex(x::AbstractMaskedArray, i::Int)
+@inline function unsafe_getindex(x::MaskedArray, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds x.data[i]
 end
 
-@inline function unsafe_setindex!(x::AbstractMaskedArray, v, i::Int)
+@inline function unsafe_setindex!(x::MaskedArray, v, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds x.data[i] = v
     v
 end
 
-getmask(x::AbstractMaskedArray) = x.mask
+getmask(x::MaskedArray) = x.mask
 
 # `f` should be `f(mask)`
-function findentry(f, x::AbstractMaskedArray)
+function findentry(f, x::MaskedArray)
     i = f(vec(x.mask)) # `vec` is not needed for BitArray
     i === nothing ? nothing : @inbounds x[i]
 end
 
 
-struct MaskedArray{T, N} <: AbstractMaskedArray{T, N}
+struct MaskedDenseArray{T, N} <: MaskedArray{T, N}
     data::Array{T, N}
     mask::Array{Bool, N} # faster than BitArray?
 end
 
-@inline function MaskedArray{T}(::UndefInitializer, dims::NTuple{N, Int}) where {T, N}
+@inline function MaskedDenseArray{T}(::UndefInitializer, dims::NTuple{N, Int}) where {T, N}
     data = Array{T}(undef, dims)
     mask = fill!(similar(data, Bool), false)
-    MaskedArray(data, mask)
+    MaskedDenseArray(data, mask)
 end
-@inline MaskedArray{T}(u::UndefInitializer, dims::Vararg{Int, N}) where {T, N} =
-    MaskedArray{T}(u, dims)
-@inline function MaskedArray(data::Array)
+@inline MaskedDenseArray{T}(u::UndefInitializer, dims::Vararg{Int, N}) where {T, N} =
+    MaskedDenseArray{T}(u, dims)
+@inline function MaskedDenseArray(data::Array)
     mask = fill!(similar(data, Bool), false)
-    MaskedArray(data, mask)
+    MaskedDenseArray(data, mask)
 end
 
-Base.IndexStyle(::Type{<: MaskedArray}) = IndexLinear()
-Base.size(x::MaskedArray) = size(x.data)
+Base.IndexStyle(::Type{<: MaskedDenseArray}) = IndexLinear()
+Base.size(x::MaskedDenseArray) = size(x.data)
 
 
 # https://discourse.julialang.org/t/poor-time-performance-on-dict/9656/14
@@ -73,33 +73,33 @@ struct FastHashInt; i::Int; end
 Base.:(==)(x::FastHashInt, y::FastHashInt) = x.i == y.i
 Base.hash(x::FastHashInt, h::UInt) = xor(UInt(x.i), h)
 
-struct HashMaskedArray{T, N} <: AbstractMaskedArray{T, N}
+struct MaskedHashArray{T, N} <: MaskedArray{T, N}
     data::Dict{FastHashInt, T}
     mask::Array{Bool, N}
     dims::NTuple{N, Int}
 end
 
-@inline function HashMaskedArray{T}(::UndefInitializer, dims::NTuple{N, Int}) where {T, N}
+@inline function MaskedHashArray{T}(::UndefInitializer, dims::NTuple{N, Int}) where {T, N}
     data = Dict{FastHashInt, T}()
     mask = fill!(Array{Bool}(undef, dims), false)
-    HashMaskedArray(data, mask, dims)
+    MaskedHashArray(data, mask, dims)
 end
-@inline HashMaskedArray{T}(u::UndefInitializer, dims::Vararg{Int, N}) where {T, N} =
-    HashMaskedArray{T}(u, dims)
+@inline MaskedHashArray{T}(u::UndefInitializer, dims::Vararg{Int, N}) where {T, N} =
+    MaskedHashArray{T}(u, dims)
 
-Base.IndexStyle(::Type{<: HashMaskedArray}) = IndexLinear()
-Base.size(x::HashMaskedArray) = x.dims
+Base.IndexStyle(::Type{<: MaskedHashArray}) = IndexLinear()
+Base.size(x::MaskedHashArray) = x.dims
 
-# Base.keys(x::HashMaskedArray) = keys(x.data) # disable because of using FastHashInt
-Base.values(x::HashMaskedArray) = values(x.data)
-Base.haskey(x::HashMaskedArray, i) = haskey(x.data, FastHashInt(i))
-Base.delete!(x::HashMaskedArray, i) = delete!(x.data, FastHashInt(i))
+# Base.keys(x::MaskedHashArray) = keys(x.data) # disable because of using FastHashInt
+Base.values(x::MaskedHashArray) = values(x.data)
+Base.haskey(x::MaskedHashArray, i) = haskey(x.data, FastHashInt(i))
+Base.delete!(x::MaskedHashArray, i) = delete!(x.data, FastHashInt(i))
 
-@inline function Base.get(x::HashMaskedArray, i::Int, default)
+@inline function Base.get(x::MaskedHashArray, i::Int, default)
     get(x.data, FastHashInt(i), default)
 end
 
-@inline function Base.getindex(x::HashMaskedArray, i::Int)
+@inline function Base.getindex(x::MaskedHashArray, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds begin
         checkmask(x, i)
@@ -107,7 +107,7 @@ end
     end
 end
 
-@inline function Base.setindex!(x::HashMaskedArray, v, i::Int)
+@inline function Base.setindex!(x::MaskedHashArray, v, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds begin
         x.data[FastHashInt(i)] = v
@@ -115,18 +115,18 @@ end
     end
     x
 end
-@inline function Base.setindex!(x::HashMaskedArray, ::Nothing, i::Int)
+@inline function Base.setindex!(x::MaskedHashArray, ::Nothing, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds x.mask[i] = false
     x
 end
 
-@inline function unsafe_getindex(x::HashMaskedArray, i::Int)
+@inline function unsafe_getindex(x::MaskedHashArray, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds x.data[FastHashInt(i)]
 end
 
-@inline function unsafe_setindex!(x::HashMaskedArray, v, i::Int)
+@inline function unsafe_setindex!(x::MaskedHashArray, v, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds x.data[FastHashInt(i)] = v
     v

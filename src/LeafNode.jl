@@ -1,12 +1,12 @@
 struct LeafNode{T, N, p} <: AbstractNode{T, N, p}
-    data::MaskedArray{T, N}
+    data::MaskedDenseArray{T, N}
     LeafNode{T, N, p}(data) where {T, N, p} = new(data)
     LeafNode{T, N, p}(::UndefInitializer) where {T, N, p} = new()
 end
 
 function LeafNode{T, N, p}() where {T, N, p}
     dims = size(LeafNode{T, N, p})
-    data = MaskedArray{T}(undef, dims)
+    data = MaskedDenseArray{T}(undef, dims)
     LeafNode{T, N, p}(data)
 end
 

@@ -1,4 +1,4 @@
-const CustomShowArrays = Union{AbstractMaskedArray, AbstractNode, TreeView, TreeArray}
+const CustomShowArrays = Union{MaskedArray, AbstractNode, TreeView, TreeArray}
 
 struct CDot end
 Base.show(io::IO, x::CDot) = print(io, "⋅")
