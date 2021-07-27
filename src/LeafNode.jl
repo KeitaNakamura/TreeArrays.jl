@@ -73,6 +73,8 @@ function allocate!(x::LeafNode, mask::AbstractArray{Bool})
     end
 end
 
+isallocated(x::LeafNode, i::Int) = isassigned(x.data, i)
+
 cleanup!(x::LeafNode) = x
 
 nleaves(x::LeafNode) = count(getmask(x))

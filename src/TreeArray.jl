@@ -64,6 +64,15 @@ function allocate!(x::TreeArray, mask::AbstractArray{Bool})
     allocate!(x.tree.rootnode, mask)
 end
 
+@inline function isallocated(x::TreeArray, i...)
+    @boundscheck checkbounds(x, i...)
+    @inbounds isallocated(x.tree, i...)
+end
+
+cleanup!(x::TreeArray) = (cleanup!(x.tree); x)
+
+Base.fill!(x::TreeArray, ::Nothing) = (fill!(x.tree, nothing); x)
+
 
 struct TreeArrayProperty{T, N, A <: TreeArray{<: Any, N}} <: AbstractArray{T, N}
     parent::A

@@ -49,6 +49,13 @@ end
         TreeArrays.allocate!(A, mask)
         @test map(i -> isactive(A, i), eachindex(A)) == mask
 
+        # isallocated
+        @test map(i -> TreeArrays.isallocated(A, i), eachindex(A)) == mask
+        A .= nothing
+        @test map(i -> TreeArrays.isallocated(A, i), eachindex(A)) == mask
+        TreeArrays.cleanup!(A)
+        @test map(i -> TreeArrays.isallocated(A, i), eachindex(A)) == falses(16, 16)
+
         for i in 1:length(A)
             A.a[i] = i
         end

@@ -128,6 +128,31 @@ end
     end
 end
 
+@inline function isallocated(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
+    @boundscheck checkbounds(x, I...)
+    index = TreeLinearIndex(x, I...)
+    @inbounds isallocated(x, index)
+end
+@generated function isallocated(x::TreeView, I::TreeIndex{depth}) where {depth}
+    exps = Expr[:(node = x.rootnode)]
+    for i in 1:depth
+        ex = quote
+            isallocated(node, I[$i]) || return false
+            node = unsafe_getindex(node, I[$i])
+        end
+        push!(exps, ex)
+    end
+    quote
+        @_inline_meta
+        @_propagate_inbounds_meta
+        $(exps...)
+        true
+    end
+end
+@inline isallocated(x::TreeView, I::CartesianIndex) = (@_propagate_inbounds_meta; isallocated(x, Tuple(I)...))
+
+cleanup!(x::TreeView) = (cleanup!(x.rootnode); x)
+
 
 function Base.fill!(x::TreeView, ::Nothing)
     node = x.rootnode
