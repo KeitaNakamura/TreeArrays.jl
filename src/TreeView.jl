@@ -111,6 +111,24 @@ end
 end
 
 
+@inline function allocate!(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
+    @boundscheck checkbounds(x, I...)
+    index = TreeLinearIndex(x, I...)
+    @inbounds allocate!(x, index)
+end
+@generated function allocate!(x::TreeView, I::TreeIndex{depth}) where {depth}
+    ex = :(x.rootnode)
+    for i in 1:depth
+        ex = :(allocate!($ex, I[$i]))
+    end
+    quote
+        @_inline_meta
+        @_propagate_inbounds_meta
+        $ex
+    end
+end
+
+
 function Base.fill!(x::TreeView, ::Nothing)
     node = x.rootnode
     isnull(node) && return x

@@ -48,5 +48,11 @@ end
         mask = similar(A, Bool)
         TreeArrays.allocate!(A, mask)
         @test map(i -> isactive(A, i), eachindex(A)) == mask
+
+        for i in 1:length(A)
+            A.a[i] = i
+        end
+        @test A.a == reshape(1:16*16, 16, 16)
+        @test A.b == zeros(16, 16)
     end
 end

@@ -30,7 +30,15 @@ Base.size(x::TreeArray) = x.dims
 leaftype(x::TreeArray) = leaftype(x.tree)
 leafeltype(x::TreeArray) = leafeltype(x.tree)
 
-@inline function Base.getindex(x::TreeArray{<: Any, N}, i::Vararg{Int, N}) where {N}
+Base.propertynames(x::TreeArray{T}) where {T} = (:tree, :dims, fieldnames(T)...)
+function Base.getproperty(x::TreeArray{<: Any, N}, name::Symbol) where {N}
+    name == :tree && return getfield(x, :tree)
+    name == :dims && return getfield(x, :dims)
+    T = fieldtype(leafeltype(x), name)
+    TreeArrayProperty{T, N, typeof(x)}(x, name)
+end
+
+@inline function Base.getindex(x::TreeArray, i::Int...)
     @boundscheck checkbounds(x, i...)
     @inbounds x.tree[i...]
 end
@@ -46,7 +54,39 @@ end
     @inbounds isactive(x.tree, i...)
 end
 
+@inline function allocate!(x::TreeArray, i...)
+    @boundscheck checkbounds(x, i...)
+    @inbounds allocate!(x.tree, i...)
+end
+
 function allocate!(x::TreeArray, mask::AbstractArray{Bool})
     promote_shape(x, mask)
     allocate!(x.tree.rootnode, mask)
+end
+
+
+struct TreeArrayProperty{T, N, A <: TreeArray{<: Any, N}} <: AbstractArray{T, N}
+    parent::A
+    name::Symbol
+end
+
+Base.size(x::TreeArrayProperty) = size(x.parent)
+leaftype(x::TreeArrayProperty) = leaftype(x.parent)
+leafeltype(x::TreeArrayProperty) = leafeltype(x.parent)
+
+@inline function Base.getindex(x::TreeArrayProperty{<: Any, N}, i::Vararg{Int, N}) where {N}
+    @boundscheck checkbounds(x, i...)
+    @inbounds getproperty(x.parent[i...], x.name)
+end
+
+@inline function Base.setindex!(x::TreeArrayProperty{<: Any, N}, v, i::Vararg{Int, N}) where {N}
+    @boundscheck checkbounds(x, i...)
+    @inbounds leaf = allocate!(x.parent, i...)
+    @inbounds setproperty!(leaf, x.name, v)
+    x
+end
+
+@inline function isactive(x::TreeArrayProperty, i...)
+    @boundscheck checkbounds(x, i...)
+    @inbounds isactive(x.parent, i...)
 end
