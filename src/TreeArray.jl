@@ -23,7 +23,7 @@ function TreeArray(::Type{Tnode}, dims::Int...) where {Tnode <: Union{DynamicNod
 end
 
 function TreeArray{T}(dims::Vararg{Int, N}) where {T, N}
-    TreeArray(DynamicNode{Node{LeafNode{T, N, 3}, N, 4}, N}, dims...)
+    TreeArray(DynamicHashNode{Node{LeafNode{T, N, 3}, N, 4}, N}, dims...)
 end
 
 Base.size(x::TreeArray) = x.dims
