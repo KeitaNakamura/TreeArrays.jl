@@ -26,6 +26,7 @@ const THREADS_THRESHOLD = 1 << 13
 
 include("utils.jl")
 include("MaskedArray.jl")
+include("PropertyArray.jl")
 include("AbstractNode.jl")
 include("LeafNode.jl")
 include("Node.jl")
