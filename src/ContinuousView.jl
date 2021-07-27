@@ -7,6 +7,15 @@ end
 Base.size(x::ContinuousView) = map(length, x.indices)
 Base.parent(x::ContinuousView) = x.parent
 
+Base.propertynames(x::ContinuousView{T}) where {T} = (:parent, :blocks, :indices, fieldnames(T)...)
+function Base.getproperty(x::ContinuousView{<: Any, N}, name::Symbol) where {N}
+    name == :parent && return getfield(x, :parent)
+    name == :blocks && return getfield(x, :blocks)
+    name == :indices && return getfield(x, :indices)
+    T = fieldtype(leafeltype(x.parent), name)
+    PropertyArray{T, N}(x, name)
+end
+
 function blockoffset(x::ContinuousView)
     block_index(TreeSize(x.parent)[end], first.(x.indices)...) .- 1
 end
