@@ -17,8 +17,8 @@ export
     HashNode,
     TreeView,
     TreeArray,
-    ContinuousView,
-    SpotView,
+    continuousview,
+    spotview,
     eachleaf!,
     nleaves
 

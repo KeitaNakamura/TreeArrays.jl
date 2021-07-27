@@ -48,7 +48,7 @@ end
     x
 end
 
-@inline function ContinuousView(A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, Colon}, N}) where {N}
+@inline function continuousview(A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, Colon}, N}) where {N}
     indices = to_indices(A, I)
     @boundscheck checkbounds(A, indices...)
     node = A.rootnode
@@ -57,7 +57,7 @@ end
     stop = CartesianIndex(block_index(dims, last.(indices)...))
     ContinuousView(node, generateblocks(start:stop, A), indices)
 end
-@inline function SpotView(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
+@inline function spotview(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(A, I...)
     node = A.rootnode
     dims = TreeSize(node)[end]
@@ -68,14 +68,14 @@ end
                    @. UnitRange(I, I+dims-1))
 end
 
-@inline function ContinuousView(A::TreeArray, I::Union{Int, UnitRange, Colon}...)
+@inline function continuousview(A::TreeArray, I::Union{Int, UnitRange, Colon}...)
     indices = to_indices(A, I)
     @boundscheck checkbounds(A, indices...)
-    @inbounds ContinuousView(A.tree, indices...)
+    @inbounds continuousview(A.tree, indices...)
 end
-@inline function SpotView(A::TreeArray, I::Int...)
+@inline function spotview(A::TreeArray, I::Int...)
     @boundscheck checkbounds(A, I...)
-    @inbounds SpotView(A.tree, I...)
+    @inbounds spotview(A.tree, I...)
 end
 
 dropleafindex(x::TreeIndex{depth}) where {depth} = TreeIndex(ntuple(i -> x.I[i], Val(depth-1)))

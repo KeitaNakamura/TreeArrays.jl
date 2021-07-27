@@ -62,7 +62,7 @@ end
         @test A.a == reshape(1:16*16, 16, 16)
         @test A.b == zeros(16, 16)
 
-        @test ContinuousView(A, 3:11, 9:14) == A[3:11, 9:14]
-        @test ContinuousView(A, 3:11, 9:14).a == A.a[3:11, 9:14]
+        @test continuousview(A, 3:11, 9:14) == A[3:11, 9:14]
+        @test continuousview(A, 3:11, 9:14).a == A.a[3:11, 9:14]
     end
 end
