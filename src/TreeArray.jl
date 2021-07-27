@@ -49,24 +49,18 @@ end
     x
 end
 
-@inline function isactive(x::TreeArray, i...)
-    @boundscheck checkbounds(x, i...)
-    @inbounds isactive(x.tree, i...)
-end
-
-@inline function allocate!(x::TreeArray, i...)
-    @boundscheck checkbounds(x, i...)
-    @inbounds allocate!(x.tree, i...)
+for f in (:isactive, :allocate!, :isallocated)
+    @eval begin
+        @inline function $f(x::TreeArray, i...)
+            @boundscheck checkbounds(x, i...)
+            @inbounds $f(x.tree, i...)
+        end
+    end
 end
 
 function allocate!(x::TreeArray, mask::AbstractArray{Bool})
     promote_shape(x, mask)
     allocate!(x.tree.rootnode, mask)
-end
-
-@inline function isallocated(x::TreeArray, i...)
-    @boundscheck checkbounds(x, i...)
-    @inbounds isallocated(x.tree, i...)
 end
 
 cleanup!(x::TreeArray) = (cleanup!(x.tree); x)

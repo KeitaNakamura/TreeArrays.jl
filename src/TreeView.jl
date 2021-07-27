@@ -26,12 +26,16 @@ end
     @inbounds x[index] = v
 end
 
-@inline function isactive(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
-    @boundscheck checkbounds(x, I...)
-    index = TreeLinearIndex(x, I...)
-    @inbounds isactive(x, index)
+for f in (:isactive, :allocate!, :isallocated)
+    @eval begin
+        @inline function $f(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
+            @boundscheck checkbounds(x, I...)
+            index = TreeLinearIndex(x, I...)
+            @inbounds $f(x, index)
+        end
+        @inline $f(x::TreeView, I::CartesianIndex) = (@_propagate_inbounds_meta; $f(x, Tuple(I)...))
+    end
 end
-@inline isactive(x::TreeView, I::CartesianIndex) = (@_propagate_inbounds_meta; isactive(x, Tuple(I)...))
 
 wrap_treeview(x) = x
 wrap_treeview(x::AbstractNode) = TreeView(x)
@@ -110,12 +114,6 @@ end
     end
 end
 
-
-@inline function allocate!(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
-    @boundscheck checkbounds(x, I...)
-    index = TreeLinearIndex(x, I...)
-    @inbounds allocate!(x, index)
-end
 @generated function allocate!(x::TreeView, I::TreeIndex{depth}) where {depth}
     ex = :(x.rootnode)
     for i in 1:depth
@@ -128,11 +126,6 @@ end
     end
 end
 
-@inline function isallocated(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
-    @boundscheck checkbounds(x, I...)
-    index = TreeLinearIndex(x, I...)
-    @inbounds isallocated(x, index)
-end
 @generated function isallocated(x::TreeView, I::TreeIndex{depth}) where {depth}
     exps = Expr[:(node = x.rootnode)]
     for i in 1:depth
@@ -149,10 +142,8 @@ end
         true
     end
 end
-@inline isallocated(x::TreeView, I::CartesianIndex) = (@_propagate_inbounds_meta; isallocated(x, Tuple(I)...))
 
 cleanup!(x::TreeView) = (cleanup!(x.rootnode); x)
-
 
 function Base.fill!(x::TreeView, ::Nothing)
     node = x.rootnode
