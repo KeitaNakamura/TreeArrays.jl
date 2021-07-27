@@ -67,6 +67,8 @@ end
 Base.IndexStyle(::Type{<: MaskedDenseArray}) = IndexLinear()
 Base.size(x::MaskedDenseArray) = size(x.data)
 
+@inline Base.isassigned(x::MaskedDenseArray, i::Int) = isassigned(x.data, i)
+
 
 # https://discourse.julialang.org/t/poor-time-performance-on-dict/9656/14
 struct FastHashInt; i::Int; end

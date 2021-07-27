@@ -47,7 +47,7 @@ function Base.delete!(x::AbstractHashNode, i)
     x
 end
 
-function allocate!(x::AbstractHashNode{T}, i) where {T}
+function allocate!(x::AbstractHashNode{T}, i::Int) where {T}
     @boundscheck checkbounds(x, i)
     @inbounds begin
         if haskey(x.data, i)

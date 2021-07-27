@@ -31,6 +31,7 @@ end
     index = TreeLinearIndex(x, I...)
     @inbounds isactive(x, index)
 end
+@inline isactive(x::TreeView, I::CartesianIndex) = (@_propagate_inbounds_meta; isactive(x, Tuple(I)...))
 
 wrap_treeview(x) = x
 wrap_treeview(x::AbstractNode) = TreeView(x)

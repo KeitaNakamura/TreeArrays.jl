@@ -45,6 +45,25 @@ end
     @inbounds unsafe_setindex!(x, v, Base._sub2ind(size(x), i...))
 end
 
+@inline function allocate!(x::AbstractNode, i::CartesianIndex)
+    @boundscheck checkbounds(x, i)
+    @inbounds allocate!(x, Base._sub2ind(size(x), Tuple(i)...))
+end
+
+function allocate!(node::AbstractNode, mask::AbstractArray{Bool})
+    checkbounds(CartesianIndices(totalsize(node)), CartesianIndices(mask))
+    dims = totalsize(Base.tail(TreeSize(node)))
+    for I in CartesianIndices(node)
+        start = CartesianIndex(@. dims * ($Tuple(I) - 1) + 1)
+        stop = min(CartesianIndex(@. $Tuple(start) + dims - 1), last(CartesianIndices(mask)))
+        childmask = @view mask[start:stop]
+        if any(childmask)
+            child = allocate!(node, I)
+            allocate!(child, childmask)
+        end
+    end
+end
+
 function cleanup!(x::AbstractNode)
     @inbounds for i in eachindex(x)
         if isactive(x, i)

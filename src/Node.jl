@@ -53,14 +53,14 @@ function Base.delete!(x::DenseNode, i)
     x
 end
 
-function allocate!(x::DenseNode{T}, i...) where {T}
-    @boundscheck checkbounds(x, i...)
+function allocate!(x::DenseNode{T}, i::Int) where {T}
+    @boundscheck checkbounds(x, i)
     @inbounds begin
-        childnode = unsafe_getindex(x, i...)
+        childnode = unsafe_getindex(x, i)
         if isnull(childnode) # && !isactive(x, i)
             childnode = T()
         end
-        x[i...] = childnode # activated in setindex!
+        x[i] = childnode # activated in setindex!
     end
     childnode
 end

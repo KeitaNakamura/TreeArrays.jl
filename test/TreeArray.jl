@@ -1,3 +1,8 @@
+mutable struct MyType
+    a::Int
+    b::Float64
+end
+
 @testset "TreeArray" begin
     for NodeType in (Node{Node{LeafNode{Float64, 2, 2}, 2, 2}, 2, 2},
                      HashNode{Node{LeafNode{Float64, 2, 2}, 2, 2}, 2, 2},
@@ -26,5 +31,22 @@
         @test all(mask[11:13, 11:13])
         @test !any(mask[1:3, 4:10])
         @test !any(mask[11:13, 1:3])
+
+        # allocate!
+        A.tree .= nothing
+        mask = similar(A, Bool)
+        TreeArrays.allocate!(A, mask)
+        @test map(i -> isactive(A, i), eachindex(A)) == mask
+    end
+    for NodeType in (Node{Node{LeafNode{MyType, 2, 2}, 2, 2}, 2, 2},
+                     HashNode{Node{LeafNode{MyType, 2, 2}, 2, 2}, 2, 2},
+                     DynamicNode{Node{LeafNode{MyType, 2, 2}, 2, 2}, 2},
+                     DynamicHashNode{Node{LeafNode{MyType, 2, 2}, 2, 2}, 2})
+        A = @inferred TreeArray(NodeType, 16, 16)
+
+        # allocate!
+        mask = similar(A, Bool)
+        TreeArrays.allocate!(A, mask)
+        @test map(i -> isactive(A, i), eachindex(A)) == mask
     end
 end

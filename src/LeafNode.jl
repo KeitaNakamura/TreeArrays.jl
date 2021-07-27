@@ -29,7 +29,50 @@ end
     x
 end
 
-allocate!(x::LeafNode, i) = x
+@generated function construct(::Type{T}) where {T}
+    exps = [:(zero($T)) for T in fieldtypes(T)]
+    quote
+        @_inline_meta
+        T($(exps...))
+    end
+end
+@generated function allocate!(x::LeafNode{T}, i::Int) where {T}
+    if T.mutable
+        quote
+            @boundscheck checkbounds(x, i)
+            @inbounds begin
+                isactive(x, i) && return x[i]
+                if isassigned(x.data, i)
+                    leaf = unsafe_getindex(x.data, i)
+                else
+                    leaf = construct(T)
+                end
+                x[i] = leaf
+            end
+            leaf
+        end
+    else
+        quote
+            @boundscheck checkbounds(x, i)
+            @inbounds begin
+                if isactive(x, i)
+                    x[i]
+                else
+                    getmask(x)[i] = true
+                    unsafe_getindex(x, i)
+                end
+            end
+        end
+    end
+end
+
+function allocate!(x::LeafNode, mask::AbstractArray{Bool})
+    checkbounds(x, CartesianIndices(mask))
+    @simd for i in eachindex(mask)
+        @inbounds mask[i] && allocate!(x, i)
+    end
+end
+
 cleanup!(x::LeafNode) = x
 
 nleaves(x::LeafNode) = count(getmask(x))

@@ -35,13 +35,18 @@ leafeltype(x::TreeArray) = leafeltype(x.tree)
     @inbounds x.tree[i...]
 end
 
-@inline function Base.setindex!(x::TreeArray{<: Any, N}, v, i::Vararg{Int, N}) where {N}
+@inline function Base.setindex!(x::TreeArray, v, i::Int...)
     @boundscheck checkbounds(x, i...)
     @inbounds x.tree[i...] = v
     x
 end
 
-@inline function isactive(x::TreeArray, i::Int...)
+@inline function isactive(x::TreeArray, i...)
     @boundscheck checkbounds(x, i...)
     @inbounds isactive(x.tree, i...)
+end
+
+function allocate!(x::TreeArray, mask::AbstractArray{Bool})
+    promote_shape(x, mask)
+    allocate!(x.tree.rootnode, mask)
 end
