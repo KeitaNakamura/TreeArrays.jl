@@ -57,6 +57,16 @@ end
                    @. UnitRange(I, I+dims-1))
 end
 
+@inline function ContinuousView(A::TreeArray, I::Union{Int, UnitRange, Colon}...)
+    indices = to_indices(A, I)
+    @boundscheck checkbounds(A, indices...)
+    @inbounds ContinuousView(A.tree, indices...)
+end
+@inline function SpotView(A::TreeArray, I::Int...)
+    @boundscheck checkbounds(A, I...)
+    @inbounds SpotView(A.tree, I...)
+end
+
 dropleafindex(x::TreeIndex{depth}) where {depth} = TreeIndex(ntuple(i -> x.I[i], Val(depth-1)))
 function generateblocks(blockindices, A::TreeView)
     map(blockindices) do i
