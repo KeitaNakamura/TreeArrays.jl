@@ -19,6 +19,7 @@ export
     TreeArray,
     continuousview,
     spotview,
+    blockview,
     eachleaf!,
     nleaves
 

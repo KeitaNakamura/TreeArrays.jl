@@ -67,15 +67,23 @@ end
                    generateblocks(SArray{NTuple{N, 2}}(start:stop), A),
                    @. UnitRange(I, I+dims-1))
 end
-
-@inline function continuousview(A::TreeArray, I::Union{Int, UnitRange, Colon}...)
-    indices = to_indices(A, I)
-    @boundscheck checkbounds(A, indices...)
-    @inbounds continuousview(A.tree, indices...)
+@inline function blockview(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
+    node = A.rootnode
+    dims = TreeSize(node)[end]
+    index = CartesianIndex(@. dims*(I-1) + 1)
+    blockindex = CartesianIndex(I)
+    ContinuousView(node,
+                   generateblocks(SArray{NTuple{N, 1}}(blockindex:blockindex), A),
+                   @. UnitRange($Tuple(index), $Tuple(index)+dims-1))
 end
-@inline function spotview(A::TreeArray, I::Int...)
-    @boundscheck checkbounds(A, I...)
-    @inbounds spotview(A.tree, I...)
+
+for f in (:continuousview, :spotview, :blockview)
+    @eval begin
+        @inline function $f(A::TreeArray, I::Union{Int, UnitRange, Colon}...)
+            @_propagate_inbounds_meta
+            $f(A.tree, I...)
+        end
+    end
 end
 
 dropleafindex(x::TreeIndex{depth}) where {depth} = TreeIndex(ntuple(i -> x.I[i], Val(depth-1)))
