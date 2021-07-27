@@ -11,13 +11,15 @@ function blockoffset(x::ContinuousView)
     block_index(TreeSize(x.parent)[end], first.(x.indices)...) .- 1
 end
 
-@inline function Base.getindex(x::ContinuousView{<: Any, N}, I::Vararg{Int, N}) where {N}
-    @boundscheck checkbounds(x, I...)
-    @inbounds I = Coordinate(x.indices)[I...]
-    blockindex, localindex = block_local_index(x, I...)
-    @inbounds begin
-        block = x.blocks[blockindex]
-        block[localindex]
+for f in (:(Base.getindex), :isactive)
+    @eval @inline function $f(x::ContinuousView{<: Any, N}, I::Vararg{Int, N}) where {N}
+        @boundscheck checkbounds(x, I...)
+        @inbounds I = Coordinate(x.indices)[I...]
+        blockindex, localindex = block_local_index(x, I...)
+        @inbounds begin
+            block = x.blocks[blockindex]
+            $f(block, localindex)
+        end
     end
 end
 
