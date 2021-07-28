@@ -7,17 +7,17 @@ end
 Base.size(x::ContinuousView) = map(length, x.indices)
 Base.parent(x::ContinuousView) = x.parent
 
-Base.propertynames(x::ContinuousView{T}) where {T} = (:parent, :blocks, :indices, fieldnames(T)...)
+Base.propertynames(x::ContinuousView) = (:parent, :blocks, :indices, fieldnames(eltype(x))...)
 function Base.getproperty(x::ContinuousView{<: Any, N}, name::Symbol) where {N}
     name == :parent && return getfield(x, :parent)
     name == :blocks && return getfield(x, :blocks)
     name == :indices && return getfield(x, :indices)
-    T = fieldtype(leafeltype(x.parent), name)
+    T = fieldtype(leafeltype(parent(x)), name)
     PropertyArray{T, N}(x, name)
 end
 
 function blockoffset(x::ContinuousView)
-    block_index(TreeSize(x.parent)[end], first.(x.indices)...) .- 1
+    block_index(TreeSize(parent(x))[end], first.(x.indices)...) .- 1
 end
 
 for f in (:(Base.getindex), :isactive, :allocate!)
@@ -102,11 +102,11 @@ end
 
 # linear
 @inline function block_index(x::ContinuousView, I::Int...)
-    dims = TreeSize(x.parent)[end]
+    dims = TreeSize(parent(x))[end]
     Base._sub2ind(size(x.blocks), (block_index(dims, I...) .- blockoffset(x))...)
 end
 @inline function block_local_index(x::ContinuousView, I::Int...)
-    dims = TreeSize(x.parent)[end]
+    dims = TreeSize(parent(x))[end]
     blockindex, localindex = block_local_index(dims, I...)
     blocklinear = Base._sub2ind(size(x.blocks), (blockindex .- blockoffset(x))...)
     locallinear = Base._sub2ind(dims, localindex...)
