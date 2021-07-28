@@ -20,7 +20,7 @@ function blockoffset(x::ContinuousView)
     block_index(TreeSize(x.parent)[end], first.(x.indices)...) .- 1
 end
 
-for f in (:(Base.getindex), :isactive)
+for f in (:(Base.getindex), :isactive, :allocate!)
     @eval @inline function $f(x::ContinuousView{<: Any, N}, I::Vararg{Int, N}) where {N}
         @boundscheck checkbounds(x, I...)
         @inbounds I = Coordinate(x.indices)[I...]
@@ -82,6 +82,10 @@ for f in (:continuousview, :spotview, :blockview)
         @inline function $f(A::TreeArray, I::Union{Int, UnitRange, Colon}...)
             @_propagate_inbounds_meta
             $f(A.tree, I...)
+        end
+        @inline function $f(A::PropertyArray, I::Union{Int, UnitRange, Colon}...)
+            @_propagate_inbounds_meta
+            getproperty($f(A.parent, I...), A.name)
         end
     end
 end
