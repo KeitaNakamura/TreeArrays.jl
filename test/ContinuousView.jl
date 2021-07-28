@@ -11,7 +11,7 @@
         @test A[11:30, 41:70] == reshape(1:600, 20, 30)
 
         v = spotview(A, 11, 41)
-        @test size(v) == (4, 4)
-        @test v == reshape(1:600, 20, 30)[1:4, 1:4]
+        @test size(v) == (5, 5)
+        @test v == reshape(1:600, 20, 30)[1:5, 1:5]
     end
 end

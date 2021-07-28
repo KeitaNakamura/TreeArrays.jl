@@ -65,7 +65,7 @@ end
     stop = start + oneunit(start)
     ContinuousView(node,
                    generateblocks(SArray{NTuple{N, 2}}(start:stop), A),
-                   @. UnitRange(I, I+dims-1))
+                   @. UnitRange(I, I+dims))
 end
 @inline function blockview(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
     node = A.rootnode
