@@ -11,20 +11,22 @@ function TreeArray(tree::TreeView{T, N, Tnode}, dims::Tuple) where {T, N, Tnode}
     TreeArray{T, N, Tnode}(tree, dims)
 end
 
-function TreeArray(::Type{Tnode}, dims::Int...) where {Tnode <: Union{Node, HashNode}}
+function TreeArray(::Type{Tnode}, dims::Tuple) where {Tnode <: Union{Node, HashNode}}
     TreeArray(TreeView(Tnode()), dims)
 end
 
-function TreeArray(::Type{Tnode}, dims::Int...) where {Tnode <: Union{DynamicNode, DynamicHashNode}}
+function TreeArray(::Type{Tnode}, dims::Tuple) where {Tnode <: Union{DynamicNode, DynamicHashNode}}
     t_child = childtype(Tnode)
     blockdims = block_index(totalsize(t_child), dims...)
     tree = TreeView(Tnode(blockdims...))
     TreeArray(tree, dims)
 end
+TreeArray(::Type{Tnode}, dims::Int...) where {Tnode} = TreeArray(Tnode, dims)
 
-function TreeArray{T}(dims::Vararg{Int, N}) where {T, N}
-    TreeArray(DynamicHashNode{Node{LeafNode{T, N, 3}, N, 4}, N}, dims...)
+function TreeArray{T}(dims::NTuple{N, Int}) where {T, N}
+    TreeArray(DynamicHashNode{Node{LeafNode{T, N, 3}, N, 4}, N}, dims)
 end
+TreeArray{T}(dims::Int...) where {T} = TreeArray{T}(dims)
 
 Base.size(x::TreeArray) = x.dims
 leaftype(x::TreeArray) = leaftype(x.tree)
