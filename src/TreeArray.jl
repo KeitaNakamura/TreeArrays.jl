@@ -28,6 +28,16 @@ function TreeArray{T}(dims::NTuple{N, Int}) where {T, N}
 end
 TreeArray{T}(dims::Int...) where {T} = TreeArray{T}(dims)
 
+function StructTreeArray(::Type{T}, dims::NTuple{N, Int}) where {T, N}
+    TreeArray(DynamicHashNode{Node{@StructLeafNode{T, N, 3}, N, 4}, N}, dims)
+end
+StructTreeArray(::Type{T}, dims::Int...) where {T} = StructTreeArray(T, dims)
+macro StructTreeArray(ex)
+    @assert Meta.isexpr(ex, :braces)
+    @assert length(ex.args) == 1
+    esc(:((dims...) -> $StructTreeArray($(ex.args[1]), dims...)))
+end
+
 Base.size(x::TreeArray) = x.dims
 leaftype(x::TreeArray) = leaftype(x.tree)
 leafeltype(x::TreeArray) = leafeltype(x.tree)
