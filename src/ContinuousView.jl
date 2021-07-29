@@ -48,7 +48,7 @@ end
     x
 end
 
-@inline function continuousview(A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, Colon}, N}) where {N}
+@inline function continuousview(A::TreeView{<: Any, N}, I::Vararg{Union{Int, AbstractUnitRange, Colon}, N}) where {N}
     indices = to_indices(A, I)
     @boundscheck checkbounds(A, indices...)
     node = A.rootnode
@@ -79,11 +79,15 @@ end
 
 for f in (:continuousview, :spotview, :blockview)
     @eval begin
-        @inline function $f(A::TreeArray, I::Union{Int, UnitRange, Colon}...)
+        @inline function $f(A::TreeArray, I::Union{Int, AbstractUnitRange, Colon}...)
             @_propagate_inbounds_meta
             $f(A.tree, I...)
         end
-        @inline function $f(A::PropertyArray, I::Union{Int, UnitRange, Colon}...)
+        @inline function $f(A::TreeArray, inds::CartesianIndices)
+            @_propagate_inbounds_meta
+            $f(A.tree, inds.indices...)
+        end
+        @inline function $f(A::PropertyArray, I::Union{Int, AbstractUnitRange, Colon}...)
             @_propagate_inbounds_meta
             getproperty($f(A.parent, I...), A.name)
         end
