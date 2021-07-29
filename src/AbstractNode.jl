@@ -90,8 +90,8 @@ function nleaves(x::AbstractNode)
     count
 end
 
-struct Dynamic end
 
+struct Dynamic end
 struct TreeSize{S}
     function TreeSize{S}() where {S}
         new{S::Tuple{Vararg{Union{Tuple{Vararg{Integer}}, Dynamic}}}}()
@@ -114,3 +114,21 @@ end
 @pure totalsize(::TreeSize{S}) where {S} = broadcast(*, S...)
 
 Base.show(io::IO, ::TreeSize{S}) where {S} = print(io, "TreeSize", S)
+
+
+struct Allocated{P, I}
+    parent::P
+    index::I
+end
+@inline set!(x::Allocated, v) = @inbounds x.parent[x.index] = v
+@inline set!(x::Allocated, name::Symbol, v) = @inbounds getproperty(x.parent, name)[x.index] = v
+@inline function allocate!(x::Allocated, i...)
+    @_propagate_inbounds_meta
+    child = @inbounds x.parent[x.index]
+    allocate!(child, i...)
+end
+@inline function Base.setindex!(x::Allocated, v, i...)
+    @_propagate_inbounds_meta
+    child = @inbounds x.parent[x.index]
+    setindex!(child, v, i...)
+end

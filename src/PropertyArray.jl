@@ -14,8 +14,8 @@ end
 
 @inline function Base.setindex!(x::PropertyArray{<: Any, N}, v, i::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(x, i...)
-    @inbounds leaf = allocate!(x.parent, i...)
-    @inbounds setproperty!(leaf, x.name, v)
+    @inbounds allocated = allocate!(x.parent, i...)
+    @inbounds set!(allocated, x.name, v)
     x
 end
 

@@ -1,4 +1,4 @@
-struct ContinuousView{T, N, p, Tnode <: AbstractNode{<: Any, N}, Tindices <: Tuple, Tblocks <: AbstractArray{LeafNode{T, N, p}, N}} <: AbstractArray{T, N}
+struct ContinuousView{T, N, p, Tnode <: AbstractNode{<: Any, N}, Tindices <: Tuple, Tblocks <: AbstractArray{<: AbstractLeafNode{T, N, p}, N}} <: AbstractArray{T, N}
     parent::Tnode # needed for new node allocation
     blocks::Tblocks
     indices::Tindices

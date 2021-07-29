@@ -1,4 +1,4 @@
-mutable struct MyType
+struct MyType
     a::Int
     b::Float64
 end
@@ -38,29 +38,32 @@ end
         TreeArrays.allocate!(A, mask)
         @test map(i -> isactive(A, i), eachindex(A)) == mask
     end
-    for NodeType in (Node{Node{LeafNode{MyType, 2, 2}, 2, 2}, 2, 2},
-                     HashNode{Node{LeafNode{MyType, 2, 2}, 2, 2}, 2, 2},
-                     DynamicNode{Node{LeafNode{MyType, 2, 2}, 2, 2}, 2},
-                     DynamicHashNode{Node{LeafNode{MyType, 2, 2}, 2, 2}, 2})
+    for NodeType in (Node{Node{@StructLeafNode{MyType, 2, 2}, 2, 2}, 2, 2},
+                     HashNode{Node{@StructLeafNode{MyType, 2, 2}, 2, 2}, 2, 2},
+                     DynamicNode{Node{@StructLeafNode{MyType, 2, 2}, 2, 2}, 2},
+                     DynamicHashNode{Node{@StructLeafNode{MyType, 2, 2}, 2, 2}, 2})
         A = @inferred TreeArray(NodeType, 16, 16)
 
         # allocate!
-        mask = similar(A, Bool)
+        mask = rand(Bool, size(A))
+        mask[1] = true # make it true in at least one element
         TreeArrays.allocate!(A, mask)
         @test map(i -> isactive(A, i), eachindex(A)) == mask
 
         # isallocated
-        @test map(i -> TreeArrays.isallocated(A, i), eachindex(A)) == mask
+        # @test map(i -> TreeArrays.isallocated(A, i), eachindex(A)) == mask
         A .= nothing
-        @test map(i -> TreeArrays.isallocated(A, i), eachindex(A)) == mask
+        # @test map(i -> TreeArrays.isallocated(A, i), eachindex(A)) == mask
+        @test any(map(i -> TreeArrays.isallocated(A, i), eachindex(A)))
         TreeArrays.cleanup!(A)
         @test map(i -> TreeArrays.isallocated(A, i), eachindex(A)) == falses(16, 16)
 
         for i in 1:length(A)
             A.a[i] = i
+            A.b[i] = 2i
         end
         @test A.a == reshape(1:16*16, 16, 16)
-        @test A.b == zeros(16, 16)
+        @test A.b == 2*reshape(1:16*16, 16, 16)
 
         @test continuousview(A, 3:11, 9:14) == A[3:11, 9:14]
         @test continuousview(A, 3:11, 9:14).a == A.a[3:11, 9:14]

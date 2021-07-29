@@ -2,7 +2,7 @@ module TreeArrays
 
 using Base: @_inline_meta, @_propagate_inbounds_meta, @pure
 
-using StaticArrays
+using StaticArrays, StructArrays
 using Coordinates
 
 export
@@ -11,6 +11,8 @@ export
     TreeLinearIndex,
     TreeCartesianIndex,
     LeafNode,
+    StructLeafNode,
+    @StructLeafNode,
     Node,
     DynamicNode,
     DynamicHashNode,

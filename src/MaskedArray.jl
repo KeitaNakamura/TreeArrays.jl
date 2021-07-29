@@ -70,6 +70,36 @@ Base.size(x::MaskedDenseArray) = size(x.data)
 @inline Base.isassigned(x::MaskedDenseArray, i::Int) = isassigned(x.data, i)
 
 
+struct MaskedStructArray{T, N, Ttuple} <: MaskedArray{T, N}
+    data::StructArray{T, N, Ttuple, Int}
+    mask::Array{Bool, N} # faster than BitArray?
+end
+
+@inline function MaskedStructArray{T}(::UndefInitializer, dims::NTuple{N, Int}) where {T, N}
+    data = StructArray{T}(undef, dims)
+    mask = fill!(similar(data, Bool), false)
+    MaskedStructArray(data, mask)
+end
+@inline MaskedStructArray{T}(u::UndefInitializer, dims::Vararg{Int, N}) where {T, N} =
+    MaskedStructArray{T}(u, dims)
+@inline function MaskedStructArray(data::StructArray)
+    mask = fill!(similar(data, Bool), false)
+    MaskedStructArray(data, mask)
+end
+
+Base.propertynames(x::MaskedStructArray) = (:data, :mask, propertynames(x.data)...)
+function Base.getproperty(x::MaskedStructArray, name::Symbol)
+    name == :data && return getfield(x, :data)
+    name == :mask && return getfield(x, :mask)
+    MaskedDenseArray(getproperty(x.data, name), x.mask)
+end
+
+Base.IndexStyle(::Type{<: MaskedStructArray}) = IndexLinear()
+Base.size(x::MaskedStructArray) = size(x.data)
+
+@inline Base.isassigned(x::MaskedStructArray, i::Int) = isassigned(x.data, i)
+
+
 # https://discourse.julialang.org/t/poor-time-performance-on-dict/9656/14
 struct FastHashInt; i::Int; end
 Base.:(==)(x::FastHashInt, y::FastHashInt) = x.i == y.i
