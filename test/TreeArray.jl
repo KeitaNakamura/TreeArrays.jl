@@ -38,11 +38,14 @@ end
         TreeArrays.allocate!(A, mask)
         @test map(i -> isactive(A, i), eachindex(A)) == mask
     end
+end
+
+@testset "StructTreeArray" begin
     for NodeType in (Node{Node{@StructLeafNode{MyType, 2, 2}, 2, 2}, 2, 2},
                      HashNode{Node{@StructLeafNode{MyType, 2, 2}, 2, 2}, 2, 2},
                      DynamicNode{Node{@StructLeafNode{MyType, 2, 2}, 2, 2}, 2},
                      DynamicHashNode{Node{@StructLeafNode{MyType, 2, 2}, 2, 2}, 2})
-        A = @inferred TreeArray(NodeType, 16, 16)
+        A = @inferred StructTreeArray(NodeType, 16, 16)
 
         # allocate!
         mask = rand(Bool, size(A))

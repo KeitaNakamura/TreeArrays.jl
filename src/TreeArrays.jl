@@ -19,7 +19,7 @@ export
     HashNode,
     TreeView,
     TreeArray,
-    @StructTreeArray,
+    StructTreeArray,
     continuousview,
     spotview,
     blockview,

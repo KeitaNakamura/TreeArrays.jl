@@ -1,4 +1,4 @@
-struct ContinuousView{T, N, p, Tnode <: AbstractNode{<: Any, N}, Tindices <: Tuple, Tblocks <: AbstractArray{<: AbstractLeafNode{T, N, p}, N}} <: AbstractArray{T, N}
+struct ContinuousView{T, N, p, Tnode <: AbstractNode{<: Any, N}, Tblocks <: AbstractArray{<: AbstractLeafNode{T, N, p}, N}, Tindices <: Tuple} <: AbstractArray{T, N}
     parent::Tnode # needed for new node allocation
     blocks::Tblocks
     indices::Tindices
@@ -7,8 +7,8 @@ end
 Base.size(x::ContinuousView) = map(length, x.indices)
 Base.parent(x::ContinuousView) = x.parent
 
-Base.propertynames(x::ContinuousView) = (:parent, :blocks, :indices, fieldnames(eltype(x))...)
-function Base.getproperty(x::ContinuousView{<: Any, N}, name::Symbol) where {N}
+Base.propertynames(x::ContinuousView{<: Any, <: Any, <: Any, <: Any, <: AbstractArray{<: StructLeafNode}}) = (:parent, :blocks, :indices, fieldnames(eltype(x))...)
+function Base.getproperty(x::ContinuousView{<: Any, N, <: Any, <: Any, <: AbstractArray{<: StructLeafNode}}, name::Symbol) where {N}
     name == :parent && return getfield(x, :parent)
     name == :blocks && return getfield(x, :blocks)
     name == :indices && return getfield(x, :indices)
@@ -79,11 +79,11 @@ end
 
 for f in (:continuousview, :spotview, :blockview)
     @eval begin
-        @inline function $f(A::TreeArray, I::Union{Int, AbstractUnitRange, Colon}...)
+        @inline function $f(A::AbstractTreeArray, I::Union{Int, AbstractUnitRange, Colon}...)
             @_propagate_inbounds_meta
             $f(A.tree, I...)
         end
-        @inline function $f(A::TreeArray, inds::CartesianIndices)
+        @inline function $f(A::AbstractTreeArray, inds::CartesianIndices)
             @_propagate_inbounds_meta
             $f(A.tree, inds.indices...)
         end
