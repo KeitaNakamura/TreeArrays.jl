@@ -4,6 +4,7 @@ Base.size(x::AbstractTreeArray) = x.dims
 leaftype(x::AbstractTreeArray) = leaftype(x.tree)
 leafeltype(x::AbstractTreeArray) = leafeltype(x.tree)
 leafblocksize(x::AbstractTreeArray) = leafblocksize(x.tree)
+leafblockunit(x::AbstractTreeArray) = leafblockunit(x.tree)
 
 @inline function Base.getindex(x::AbstractTreeArray{<: Any, N}, i::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(x, i...)

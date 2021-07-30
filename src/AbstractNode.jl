@@ -24,6 +24,7 @@ leafeltype(x::AbstractNode) = leafeltype(typeof(x))
 
 # leafblocksize
 leafblocksize(node::AbstractNode) = Int.(totalsize(node) .÷ size(leaftype(node)))
+leafblockunit(node::AbstractNode) = size(leaftype(node))
 
 getmask(x::AbstractNode) = getmask(x.data)
 isactive(x::AbstractNode, i...) = (@_propagate_inbounds_meta; isnull(x) ? false : getmask(x)[i...])
