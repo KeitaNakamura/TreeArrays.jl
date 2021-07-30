@@ -22,8 +22,8 @@ leaftype(x::AbstractNode) = leaftype(typeof(x))
 @pure leafeltype(T::Type{<: AbstractNode}) = eltype(leaftype(T))
 leafeltype(x::AbstractNode) = leafeltype(typeof(x))
 
-# leafblocksize
-leafblocksize(node::AbstractNode) = Int.(totalsize(node) .÷ size(leaftype(node)))
+# leafblock
+nleafblocks(node::AbstractNode) = Int.(totalsize(node) .÷ size(leaftype(node)))
 leafblockunit(node::AbstractNode) = size(leaftype(node))
 
 getmask(x::AbstractNode) = getmask(x.data)

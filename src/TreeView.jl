@@ -10,7 +10,7 @@ end
 Base.size(x::TreeView) = totalsize(x.rootnode)
 leaftype(x::TreeView) = leaftype(x.rootnode)
 leafeltype(x::TreeView) = leafeltype(x.rootnode)
-leafblocksize(x::TreeView) = leafblocksize(x.rootnode)
+nleafblocks(x::TreeView) = nleafblocks(x.rootnode)
 leafblockunit(x::TreeView) = leafblockunit(x.rootnode)
 
 @inline TreeLinearIndex(x::TreeView{<: Any, N}, I::Vararg{Integer, N}) where {N} = TreeLinearIndex(x.rootnode, I...)

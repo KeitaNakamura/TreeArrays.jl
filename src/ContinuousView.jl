@@ -110,11 +110,11 @@ end
 dropleafindex(x::TreeIndex{depth}) where {depth} = TreeIndex(ntuple(i -> x.I[i], Val(depth-1)))
 function generateblocks(blockindices, A::TreeView)
     node = A.rootnode
-    blksize = leafblocksize(node)
+    nblocks = nleafblocks(node)
     broadcast(blockindices) do i
         @_inline_meta
         blockindex = Tuple(i)
-        checkbounds(Bool, CartesianIndices(blksize), blockindex...) || return null(leaftype(node))
+        checkbounds(Bool, CartesianIndices(nblocks), blockindex...) || return null(leaftype(node))
         I = blockindex .* TreeSize(node)[end] # global index
         treeindex = dropleafindex(TreeLinearIndex(A, I...))
         @inbounds (A[treeindex]).rootnode # should be @inbounds?
