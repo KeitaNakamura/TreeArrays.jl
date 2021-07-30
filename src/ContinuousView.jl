@@ -96,6 +96,10 @@ for f in (:continuousview, :spotview, :blockview, :blockaroundview)
             @_propagate_inbounds_meta
             $f(A.tree, inds.indices...)
         end
+        @inline function $f(A::AbstractTreeArray, I::CartesianIndex)
+            @_propagate_inbounds_meta
+            $f(A.tree, Tuple(I)...)
+        end
         @inline function $f(A::PropertyArray, I::Union{Int, AbstractUnitRange, Colon}...)
             @_propagate_inbounds_meta
             getproperty($f(A.parent, I...), A.name)
