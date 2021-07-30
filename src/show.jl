@@ -7,6 +7,7 @@ struct ShowWrapper{T, N, A <: AbstractArray{T, N}} <: AbstractArray{T, N}
     parent::A
 end
 Base.size(x::ShowWrapper) = size(x.parent)
+Base.axes(x::ShowWrapper) = axes(x.parent)
 @inline function Base.getindex(x::ShowWrapper, i::Int...)
     @_propagate_inbounds_meta
     p = x.parent

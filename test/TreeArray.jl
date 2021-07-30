@@ -68,7 +68,7 @@ end
         @test A.a == reshape(1:16*16, 16, 16)
         @test A.b == 2*reshape(1:16*16, 16, 16)
 
-        @test continuousview(A, 3:11, 9:14) == A[3:11, 9:14]
-        @test continuousview(A, 3:11, 9:14).a == A.a[3:11, 9:14]
+        @test continuousview(A, 3:11, 9:14) == OffsetArray(A[3:11, 9:14], 3:11, 9:14)
+        @test continuousview(A, 3:11, 9:14).a == OffsetArray(A.a[3:11, 9:14], 3:11, 9:14)
     end
 end

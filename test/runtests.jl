@@ -1,4 +1,5 @@
 using TreeArrays
+using OffsetArrays
 using Test
 
 using TreeArrays: isactive, isallocated
