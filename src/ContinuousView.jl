@@ -112,6 +112,7 @@ function generateblocks(blockindices, A::TreeView)
     node = A.rootnode
     blksize = leafblocksize(node)
     broadcast(blockindices) do i
+        @_inline_meta
         blockindex = Tuple(i)
         checkbounds(Bool, CartesianIndices(blksize), blockindex...) || return null(leaftype(node))
         I = blockindex .* TreeSize(node)[end] # global index
