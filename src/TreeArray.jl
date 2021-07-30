@@ -3,7 +3,7 @@ abstract type AbstractTreeArray{T, N} <: AbstractArray{T, N} end
 Base.size(x::AbstractTreeArray) = x.dims
 leaftype(x::AbstractTreeArray) = leaftype(x.tree)
 leafeltype(x::AbstractTreeArray) = leafeltype(x.tree)
-nleafblocks(x::AbstractTreeArray) = nleafblocks(x.tree)
+nleafblocks(x::AbstractTreeArray) = @. ($size(x) - 1) ÷ $leafblockunit(x) + 1
 leafblockunit(x::AbstractTreeArray) = leafblockunit(x.tree)
 
 @inline function Base.getindex(x::AbstractTreeArray{<: Any, N}, i::Vararg{Int, N}) where {N}
