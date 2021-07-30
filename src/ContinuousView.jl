@@ -47,17 +47,15 @@ end
 
 generate_offset_blocks(blockindices::CartesianIndices, A) = OffsetArray(generateblocks(blockindices, A), blockindices)
 generate_offset_blocks(SA, blockindices::CartesianIndices, A) = OffsetArray(generateblocks(SA(blockindices), A), blockindices)
-function continuousview(A::TreeView{<: Any, N}, I::Vararg{Union{Int, AbstractUnitRange, Colon}, N}) where {N}
+function _continuousview(parentdims::Tuple, A::TreeView{<: Any, N}, I::Vararg{Union{Int, AbstractUnitRange, Colon}, N}) where {N}
     indices = to_indices(A, I)
-    @boundscheck checkbounds(A, indices...)
     node = A.rootnode
     dims = TreeSize(node)[end]
     start = CartesianIndex(block_index(dims, first.(indices)...))
     stop = CartesianIndex(block_index(dims, last.(indices)...))
     ContinuousView(node, generate_offset_blocks(start:stop, A), indices)
 end
-function spotview(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
-    @boundscheck checkbounds(A, I...)
+function _spotview(parentdims::Tuple, A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
     node = A.rootnode
     dims = TreeSize(node)[end]
     start = CartesianIndex(block_index(dims, I...))
@@ -66,16 +64,17 @@ function spotview(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
                    generate_offset_blocks(SArray{NTuple{N, 2}}, start:stop, A),
                    @. UnitRange(I, I+dims))
 end
-function blockview(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
+function _blockview(parentdims::Tuple, A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
     node = A.rootnode
     dims = TreeSize(node)[end]
     index = CartesianIndex(@. dims*(I-1) + 1)
     blockindex = CartesianIndex(I)
+    indices = @. UnitRange($Tuple(index), $Tuple(index)+dims-1)
     ContinuousView(node,
                    generate_offset_blocks(SArray{NTuple{N, 1}}, blockindex:blockindex, A),
-                   @.(UnitRange($Tuple(index), $Tuple(index)+dims-1)))
+                   (CartesianIndices(indices) ∩ CartesianIndices(parentdims)).indices)
 end
-function blockaroundview(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
+function _blockaroundview(parentdims::Tuple, A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
     node = A.rootnode
     dims = TreeSize(node)[end]
     index = CartesianIndex(@. dims*(I-1) + 1)
@@ -83,26 +82,29 @@ function blockaroundview(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
     indices = @. UnitRange($Tuple(index)-range, $Tuple(index)+dims-1+range)
     ContinuousView(node,
                    generate_offset_blocks(SArray{NTuple{N, 3}}, CartesianIndex(I.-1):CartesianIndex(I.+1), A),
-                   (CartesianIndices(indices) ∩ CartesianIndices(A)).indices)
+                   (CartesianIndices(indices) ∩ CartesianIndices(parentdims)).indices)
 end
 
+gettreeview(x::TreeView) = x
+gettreeview(x::AbstractTreeArray) = x.tree
 for f in (:continuousview, :spotview, :blockview, :blockaroundview)
+    _f = Symbol(:_, f)
     @eval begin
-        @inline function $f(A::AbstractTreeArray, I::Union{Int, AbstractUnitRange, Colon}...)
-            @_propagate_inbounds_meta
-            $f(A.tree, I...)
+        @inline function $f(A::Union{AbstractTreeArray, TreeView}, I::Union{Int, AbstractUnitRange, Colon}...)
+            @boundscheck checkbounds(A, I...)
+            @inbounds $_f(size(A), gettreeview(A), I...)
         end
-        @inline function $f(A::AbstractTreeArray, inds::CartesianIndices)
-            @_propagate_inbounds_meta
-            $f(A.tree, inds.indices...)
+        @inline function $f(A::Union{AbstractTreeArray, TreeView}, inds::CartesianIndices)
+            @boundscheck checkbounds(A, inds)
+            @inbounds $_f(size(A), gettreeview(A), inds.indices...)
         end
-        @inline function $f(A::AbstractTreeArray, I::CartesianIndex)
-            @_propagate_inbounds_meta
-            $f(A.tree, Tuple(I)...)
+        @inline function $f(A::Union{AbstractTreeArray, TreeView}, I::CartesianIndex)
+            @boundscheck checkbounds(A, I)
+            @inbounds $_f(size(A), gettreeview(A), Tuple(I)...)
         end
         @inline function $f(A::PropertyArray, I::Union{Int, AbstractUnitRange, Colon}...)
-            @_propagate_inbounds_meta
-            getproperty($f(A.parent, I...), A.name)
+            @boundscheck checkbounds(A, I...)
+            @inbounds getproperty($f(A.parent, I...), A.name)
         end
     end
 end
