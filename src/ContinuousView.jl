@@ -47,7 +47,7 @@ end
 
 generate_offset_blocks(blockindices::CartesianIndices, A) = OffsetArray(generateblocks(blockindices, A), blockindices)
 generate_offset_blocks(SA, blockindices::CartesianIndices, A) = OffsetArray(generateblocks(SA(blockindices), A), blockindices)
-@inline function continuousview(A::TreeView{<: Any, N}, I::Vararg{Union{Int, AbstractUnitRange, Colon}, N}) where {N}
+function continuousview(A::TreeView{<: Any, N}, I::Vararg{Union{Int, AbstractUnitRange, Colon}, N}) where {N}
     indices = to_indices(A, I)
     @boundscheck checkbounds(A, indices...)
     node = A.rootnode
@@ -56,7 +56,7 @@ generate_offset_blocks(SA, blockindices::CartesianIndices, A) = OffsetArray(gene
     stop = CartesianIndex(block_index(dims, last.(indices)...))
     ContinuousView(node, generate_offset_blocks(start:stop, A), indices)
 end
-@inline function spotview(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
+function spotview(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(A, I...)
     node = A.rootnode
     dims = TreeSize(node)[end]
@@ -66,7 +66,7 @@ end
                    generate_offset_blocks(SArray{NTuple{N, 2}}, start:stop, A),
                    @. UnitRange(I, I+dims))
 end
-@inline function blockview(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
+function blockview(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
     node = A.rootnode
     dims = TreeSize(node)[end]
     index = CartesianIndex(@. dims*(I-1) + 1)
@@ -75,7 +75,7 @@ end
                    generate_offset_blocks(SArray{NTuple{N, 1}}, blockindex:blockindex, A),
                    @.(UnitRange($Tuple(index), $Tuple(index)+dims-1)))
 end
-@inline function blockaroundview(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
+function blockaroundview(A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
     node = A.rootnode
     dims = TreeSize(node)[end]
     index = CartesianIndex(@. dims*(I-1) + 1)
