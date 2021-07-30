@@ -49,10 +49,11 @@ end
     @inbounds unsafe_setindex!(x, v, Base._sub2ind(size(x), i...))
 end
 
-@inline function allocate!(x::AbstractNode, i::CartesianIndex)
-    @boundscheck checkbounds(x, i)
-    @inbounds allocate!(x, Base._sub2ind(size(x), Tuple(i)...))
+@inline function allocate!(x::AbstractNode{<: Any, N}, I::Vararg{Int, N}) where {N}
+    @boundscheck checkbounds(x, I...)
+    @inbounds allocate!(x, Base._sub2ind(size(x), I...))
 end
+@inline allocate!(x::AbstractNode, i::CartesianIndex) = (@_propagate_inbounds_meta; allocate!(x, Tuple(i)...))
 
 function allocate!(node::AbstractNode, mask::AbstractArray{Bool})
     checkbounds(CartesianIndices(totalsize(node)), CartesianIndices(mask))
