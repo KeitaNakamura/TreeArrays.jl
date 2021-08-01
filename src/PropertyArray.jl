@@ -7,6 +7,8 @@ PropertyArray{T, N}(parent::A, name::Symbol) where {T, N, A} = PropertyArray{T, 
 
 Base.size(x::PropertyArray) = size(x.parent)
 Base.axes(x::PropertyArray) = axes(x.parent)
+Base.parent(x::PropertyArray) = x.parent
+rootnode(x::PropertyArray) = rootnode(parent(x))
 
 @inline function Base.getindex(x::PropertyArray{<: Any, N}, i::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(x, i...)

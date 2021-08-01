@@ -77,9 +77,9 @@ end
 
 function eachleaf!(f, A::TreeView)
     if length(A) > THREADS_THRESHOLD
-        eachleaf_threads!(f, A.rootnode)
+        eachleaf_threads!(f, rootnode(A))
     else
-        eachleaf!(f, A.rootnode)
+        eachleaf!(f, rootnode(A))
     end
     A
 end
@@ -90,9 +90,9 @@ function eachleaf!(f, A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, Co
     indices = CartesianIndices(to_indices(A, map(_torange, I)))
     @boundscheck checkbounds(A, indices)
     @inbounds if length(A) > THREADS_THRESHOLD
-        eachleaf_threads!(f, A.rootnode, indices)
+        eachleaf_threads!(f, rootnode(A), indices)
     else
-        eachleaf!(f, A.rootnode, indices)
+        eachleaf!(f, rootnode(A), indices)
     end
     A
 end

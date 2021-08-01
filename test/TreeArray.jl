@@ -12,9 +12,9 @@ end
 
         @test size(A) == (16, 16)
         if NodeType <: Union{Node, HashNode}
-            @test size(A.tree.rootnode) == (4, 4)
+            @test size(rootnode(A.tree)) == (4, 4)
         else
-            @test size(A.tree.rootnode) == (1, 1)
+            @test size(rootnode(A.tree)) == (1, 1)
         end
 
         A[1:3, 1:3] .= reshape(1:9, 3, 3)

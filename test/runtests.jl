@@ -2,7 +2,7 @@ using TreeArrays
 using OffsetArrays
 using Test
 
-using TreeArrays: isactive, isallocated
+using TreeArrays: isactive, isallocated, rootnode
 
 include("utils.jl")
 include("MaskedArray.jl")

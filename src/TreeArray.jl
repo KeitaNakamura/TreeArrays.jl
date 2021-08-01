@@ -5,6 +5,7 @@ leaftype(x::AbstractTreeArray) = leaftype(x.tree)
 leafeltype(x::AbstractTreeArray) = leafeltype(x.tree)
 nleafblocks(x::AbstractTreeArray) = @. ($size(x) - 1) ÷ $leafblockunit(x) + 1
 leafblockunit(x::AbstractTreeArray) = leafblockunit(x.tree)
+rootnode(x::AbstractTreeArray) = rootnode(x.tree)
 
 @inline function Base.getindex(x::AbstractTreeArray{<: Any, N}, i::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(x, i...)
@@ -28,7 +29,7 @@ end
 
 function allocate!(x::AbstractTreeArray, mask::AbstractArray{Bool})
     promote_shape(x, mask)
-    allocate!(x.tree.rootnode, mask)
+    allocate!(rootnode(x.tree), mask)
 end
 
 cleanup!(x::AbstractTreeArray) = (cleanup!(x.tree); x)

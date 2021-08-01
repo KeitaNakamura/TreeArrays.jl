@@ -32,31 +32,31 @@
         end
 
         # cleanup!
-        TreeArrays.cleanup!(A.rootnode)
-        @test isallocated(A.rootnode, 1) == true
-        @test isallocated(TreeArrays.unsafe_getindex(A.rootnode, 1), 1) == false
+        TreeArrays.cleanup!(rootnode(A))
+        @test isallocated(rootnode(A), 1) == true
+        @test isallocated(TreeArrays.unsafe_getindex(rootnode(A), 1), 1) == false
 
         # check allocation after deactivating
         A .= nothing
-        @test isallocated(A.rootnode, 1) == true
-        @test isallocated(A.rootnode, 2) == false
-        @test isallocated(A.rootnode, 3) == false
-        @test isallocated(A.rootnode, 4) == true
-        @test isallocated(TreeArrays.unsafe_getindex(A.rootnode, 1), 1) == false
-        @test isallocated(TreeArrays.unsafe_getindex(A.rootnode, 1), 2) == true
-        @test isallocated(TreeArrays.unsafe_getindex(A.rootnode, 1), 3) == true
-        @test isallocated(TreeArrays.unsafe_getindex(A.rootnode, 1), 4) == true
-        @test isallocated(TreeArrays.unsafe_getindex(A.rootnode, 4), 1) == false
-        @test isallocated(TreeArrays.unsafe_getindex(A.rootnode, 4), 2) == false
-        @test isallocated(TreeArrays.unsafe_getindex(A.rootnode, 4), 3) == false
-        @test isallocated(TreeArrays.unsafe_getindex(A.rootnode, 4), 4) == true
+        @test isallocated(rootnode(A), 1) == true
+        @test isallocated(rootnode(A), 2) == false
+        @test isallocated(rootnode(A), 3) == false
+        @test isallocated(rootnode(A), 4) == true
+        @test isallocated(TreeArrays.unsafe_getindex(rootnode(A), 1), 1) == false
+        @test isallocated(TreeArrays.unsafe_getindex(rootnode(A), 1), 2) == true
+        @test isallocated(TreeArrays.unsafe_getindex(rootnode(A), 1), 3) == true
+        @test isallocated(TreeArrays.unsafe_getindex(rootnode(A), 1), 4) == true
+        @test isallocated(TreeArrays.unsafe_getindex(rootnode(A), 4), 1) == false
+        @test isallocated(TreeArrays.unsafe_getindex(rootnode(A), 4), 2) == false
+        @test isallocated(TreeArrays.unsafe_getindex(rootnode(A), 4), 3) == false
+        @test isallocated(TreeArrays.unsafe_getindex(rootnode(A), 4), 4) == true
 
         # cleanup!
-        TreeArrays.cleanup!(A.rootnode)
-        @test isallocated(A.rootnode, 1) == false
-        @test isallocated(A.rootnode, 2) == false
-        @test isallocated(A.rootnode, 3) == false
-        @test isallocated(A.rootnode, 4) == false
+        TreeArrays.cleanup!(rootnode(A))
+        @test isallocated(rootnode(A), 1) == false
+        @test isallocated(rootnode(A), 2) == false
+        @test isallocated(rootnode(A), 3) == false
+        @test isallocated(rootnode(A), 4) == false
     end
     @testset "threads computations" begin
         for node in (Node{Node{LeafNode{Float64, 2, 3}, 2, 3}, 2, 3}(),

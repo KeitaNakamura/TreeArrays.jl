@@ -1,5 +1,5 @@
 struct TreeView{T, N, Tnode <: AbstractNode{<: Any, N}} <: AbstractArray{T, N}
-    rootnode::Tnode
+    node::Tnode
 end
 
 function TreeView(rootnode::AbstractNode{<: Any, N}) where {N}
@@ -7,14 +7,15 @@ function TreeView(rootnode::AbstractNode{<: Any, N}) where {N}
     TreeView{T, N, typeof(rootnode)}(rootnode)
 end
 
-Base.size(x::TreeView) = totalsize(x.rootnode)
-leaftype(x::TreeView) = leaftype(x.rootnode)
-leafeltype(x::TreeView) = leafeltype(x.rootnode)
-nleafblocks(x::TreeView) = nleafblocks(x.rootnode)
-leafblockunit(x::TreeView) = leafblockunit(x.rootnode)
+rootnode(x::TreeView) = x.node
+Base.size(x::TreeView) = totalsize(rootnode(x))
+leaftype(x::TreeView) = leaftype(rootnode(x))
+leafeltype(x::TreeView) = leafeltype(rootnode(x))
+nleafblocks(x::TreeView) = nleafblocks(rootnode(x))
+leafblockunit(x::TreeView) = leafblockunit(rootnode(x))
 
-@inline TreeLinearIndex(x::TreeView{<: Any, N}, I::Vararg{Integer, N}) where {N} = TreeLinearIndex(x.rootnode, I...)
-@inline TreeCartesianIndex(x::TreeView{<: Any, N}, I::Vararg{Integer, N}) where {N} = TreeCartesianIndex(x.rootnode, I...)
+@inline TreeLinearIndex(x::TreeView{<: Any, N}, I::Vararg{Integer, N}) where {N} = TreeLinearIndex(rootnode(x), I...)
+@inline TreeCartesianIndex(x::TreeView{<: Any, N}, I::Vararg{Integer, N}) where {N} = TreeCartesianIndex(rootnode(x), I...)
 
 @inline function Base.getindex(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(x, I...)
@@ -42,7 +43,7 @@ end
 wrap_treeview(x) = x
 wrap_treeview(x::AbstractNode) = TreeView(x)
 @generated function Base.getindex(x::TreeView, I::TreeIndex{depth}) where {depth}
-    ex = :(x.rootnode)
+    ex = :(rootnode(x))
     for i in 1:depth
         ex = :($ex[I[$i]])
     end
@@ -60,7 +61,7 @@ end
 end
 
 @generated function Base.setindex!(x::TreeView, ::Nothing, I::TreeIndex{depth}) where {depth}
-    ex = :(x.rootnode)
+    ex = :(rootnode(x))
     for i in 1:depth
         sym = Symbol(:node, i)
         ex = quote
@@ -77,7 +78,7 @@ end
 end
 
 @generated function isactive(x::TreeView, I::TreeIndex{depth}) where {depth}
-    ex = :(x.rootnode)
+    ex = :(rootnode(x))
     for i in 1:depth
         sym = Symbol(:node, i)
         ex = quote
@@ -101,7 +102,7 @@ end
 end
 
 @generated function _setindex!_getleaf(x::TreeView, v, I::TreeIndex{depth}) where {depth}
-    ex = :(x.rootnode)
+    ex = :(rootnode(x))
     for i in 1:depth
         if i == depth
             ex = :(setindex!($ex, v, I[$i]))
@@ -117,7 +118,7 @@ end
 end
 
 @generated function allocate!(x::TreeView, I::TreeIndex{depth}) where {depth}
-    ex = :(x.rootnode)
+    ex = :(rootnode(x))
     for i in 1:depth
         ex = :(allocate!($ex, I[$i]))
     end
@@ -129,7 +130,7 @@ end
 end
 
 @generated function isallocated(x::TreeView, I::TreeIndex{depth}) where {depth}
-    exps = Expr[:(node = x.rootnode)]
+    exps = Expr[:(node = rootnode(x))]
     for i in 1:depth
         ex = quote
             isallocated(node, I[$i]) || return false
@@ -145,10 +146,10 @@ end
     end
 end
 
-cleanup!(x::TreeView) = (cleanup!(x.rootnode); x)
+cleanup!(x::TreeView) = (cleanup!(rootnode(x)); x)
 
 function Base.fill!(x::TreeView, ::Nothing)
-    node = x.rootnode
+    node = rootnode(x)
     isnull(node) && return x
     if length(x) > THREADS_THRESHOLD
         fill!(getmask(node), false)
@@ -169,7 +170,7 @@ function Base.fill!(A::SubArray{<: Any, <: Any, <: TreeView}, ::Nothing)
 end
 
 function nleaves(x::TreeView)
-    node = x.rootnode
+    node = rootnode(x)
     if length(x) > THREADS_THRESHOLD
         isnull(node) && return 0
         counts = zeros(Int, Threads.nthreads())

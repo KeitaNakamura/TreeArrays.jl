@@ -7,6 +7,7 @@ end
 Base.size(x::ContinuousView) = map(length, x.indices)
 Base.axes(x::ContinuousView) = Base.IdentityUnitRange.(x.indices)
 Base.parent(x::ContinuousView) = x.parent
+rootnode(x::ContinuousView) = parent(x)
 
 Base.propertynames(x::ContinuousView{<: Any, <: Any, <: Any, <: Any, <: AbstractArray{<: StructLeafNode}}) = (:parent, :blocks, :indices, fieldnames(eltype(x))...)
 function Base.getproperty(x::ContinuousView{<: Any, N, <: Any, <: Any, <: AbstractArray{<: StructLeafNode}}, name::Symbol) where {N}
@@ -49,14 +50,14 @@ generate_offset_blocks(blockindices::CartesianIndices, A) = OffsetArray(generate
 generate_offset_blocks(SA, blockindices::CartesianIndices, A) = OffsetArray(generateblocks(SA(blockindices), A), blockindices)
 function _continuousview(parentdims::Tuple, A::TreeView{<: Any, N}, I::Vararg{Union{Int, AbstractUnitRange, Colon}, N}) where {N}
     indices = to_indices(A, I)
-    node = A.rootnode
+    node = rootnode(A)
     dims = TreeSize(node)[end]
     start = CartesianIndex(block_index(dims, first.(indices)...))
     stop = CartesianIndex(block_index(dims, last.(indices)...))
     ContinuousView(node, generate_offset_blocks(start:stop, A), indices)
 end
 function _spotview(parentdims::Tuple, A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
-    node = A.rootnode
+    node = rootnode(A)
     dims = TreeSize(node)[end]
     start = CartesianIndex(block_index(dims, I...))
     stop = start + oneunit(start)
@@ -65,7 +66,7 @@ function _spotview(parentdims::Tuple, A::TreeView{<: Any, N}, I::Vararg{Int, N})
                    @. UnitRange(I, I+dims))
 end
 function _blockview(parentdims::Tuple, A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
-    node = A.rootnode
+    node = rootnode(A)
     dims = TreeSize(node)[end]
     index = CartesianIndex(@. dims*(I-1) + 1)
     blockindex = CartesianIndex(I)
@@ -75,7 +76,7 @@ function _blockview(parentdims::Tuple, A::TreeView{<: Any, N}, I::Vararg{Int, N}
                    (CartesianIndices(indices) ∩ CartesianIndices(parentdims)).indices)
 end
 function _blockaroundview(parentdims::Tuple, A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
-    node = A.rootnode
+    node = rootnode(A)
     dims = TreeSize(node)[end]
     index = CartesianIndex(@. dims*(I-1) + 1)
     range = dims .÷ 2
@@ -111,7 +112,7 @@ end
 
 dropleafindex(x::TreeIndex{depth}) where {depth} = TreeIndex(ntuple(i -> x.I[i], Val(depth-1)))
 function generateblocks(blockindices, A::TreeView)
-    node = A.rootnode
+    node = rootnode(A)
     nblocks = nleafblocks(node)
     broadcast(blockindices) do i
         @_inline_meta
@@ -119,6 +120,6 @@ function generateblocks(blockindices, A::TreeView)
         checkbounds(Bool, CartesianIndices(nblocks), blockindex...) || return null(leaftype(node))
         I = blockindex .* TreeSize(node)[end] # global index
         treeindex = dropleafindex(TreeLinearIndex(A, I...))
-        @inbounds (A[treeindex]).rootnode # should be @inbounds?
+        @inbounds rootnode(A[treeindex]) # should be @inbounds?
     end
 end
