@@ -65,11 +65,11 @@ function StructTreeArray{T}(dims::NTuple{N, Int}) where {T, N}
 end
 
 Base.propertynames(x::StructTreeArray{T}) where {T} = (:tree, :dims, fieldnames(T)...)
-function Base.getproperty(x::StructTreeArray{<: Any, N}, name::Symbol) where {N}
+@inline function Base.getproperty(x::StructTreeArray{<: Any, N}, name::Symbol) where {N}
     name == :tree && return getfield(x, :tree)
     name == :dims && return getfield(x, :dims)
     T = fieldtype(leafeltype(x), name)
-    PropertyArray{T, N}(x, name)
+    PropertyArray{T, N, name}(x)
 end
 
 

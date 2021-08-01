@@ -1,24 +1,23 @@
-struct PropertyArray{T, N, A <: AbstractArray{<: Any, N}} <: AbstractArray{T, N}
+struct PropertyArray{T, N, name, A <: AbstractArray{<: Any, N}} <: AbstractArray{T, N}
     parent::A
-    name::Symbol
 end
 
-PropertyArray{T, N}(parent::A, name::Symbol) where {T, N, A} = PropertyArray{T, N, A}(parent, name)
+PropertyArray{T, N, name}(parent::A) where {T, N, name, A} = PropertyArray{T, N, name, A}(parent)
 
 Base.size(x::PropertyArray) = size(x.parent)
 Base.axes(x::PropertyArray) = axes(x.parent)
 Base.parent(x::PropertyArray) = x.parent
 rootnode(x::PropertyArray) = rootnode(parent(x))
 
-@inline function Base.getindex(x::PropertyArray{<: Any, N}, i::Vararg{Int, N}) where {N}
+@inline function Base.getindex(x::PropertyArray{<: Any, N, name}, i::Vararg{Int, N}) where {N, name}
     @boundscheck checkbounds(x, i...)
-    @inbounds getproperty(x.parent[i...], x.name)
+    @inbounds getproperty(x.parent[i...], name)
 end
 
-@inline function Base.setindex!(x::PropertyArray{<: Any, N}, v, i::Vararg{Int, N}) where {N}
+@inline function Base.setindex!(x::PropertyArray{<: Any, N, name}, v, i::Vararg{Int, N}) where {N, name}
     @boundscheck checkbounds(x, i...)
     @inbounds allocated = allocate!(x.parent, i...)
-    @inbounds set!(allocated, x.name, v)
+    @inbounds set!(allocated, name, v)
     x
 end
 

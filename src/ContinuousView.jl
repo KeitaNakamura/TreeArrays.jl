@@ -10,12 +10,12 @@ Base.parent(x::ContinuousView) = x.parent
 rootnode(x::ContinuousView) = parent(x)
 
 Base.propertynames(x::ContinuousView{<: Any, <: Any, <: Any, <: Any, <: AbstractArray{<: StructLeafNode}}) = (:parent, :blocks, :indices, fieldnames(eltype(x))...)
-function Base.getproperty(x::ContinuousView{<: Any, N, <: Any, <: Any, <: AbstractArray{<: StructLeafNode}}, name::Symbol) where {N}
+@inline function Base.getproperty(x::ContinuousView{<: Any, N, <: Any, <: Any, <: AbstractArray{<: StructLeafNode}}, name::Symbol) where {N}
     name == :parent && return getfield(x, :parent)
     name == :blocks && return getfield(x, :blocks)
     name == :indices && return getfield(x, :indices)
     T = fieldtype(leafeltype(parent(x)), name)
-    PropertyArray{T, N}(x, name)
+    PropertyArray{T, N, name}(x)
 end
 
 block_local_index(x::ContinuousView{<: Any, N}, I::Vararg{Int, N}) where {N} =
@@ -103,9 +103,9 @@ for f in (:continuousview, :spotview, :blockview, :blockaroundview)
             @boundscheck checkbounds(A, I)
             @inbounds $_f(size(A), gettreeview(A), Tuple(I)...)
         end
-        @inline function $f(A::PropertyArray, I...)
+        @inline function $f(A::PropertyArray{<: Any, <: Any, name}, I...) where {name}
             @boundscheck checkbounds(A, I...)
-            @inbounds getproperty($f(A.parent, I...), A.name)
+            @inbounds getproperty($f(A.parent, I...), name)
         end
     end
 end

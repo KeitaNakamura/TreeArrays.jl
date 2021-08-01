@@ -88,10 +88,10 @@ end
 end
 
 Base.propertynames(x::MaskedStructArray) = (:data, :mask, propertynames(x.data)...)
-function Base.getproperty(x::MaskedStructArray, name::Symbol)
+@inline function Base.getproperty(x::MaskedStructArray, name::Symbol)
     name == :data && return getfield(x, :data)
     name == :mask && return getfield(x, :mask)
-    MaskedDenseArray(getproperty(x.data, name), x.mask)
+    MaskedDenseArray(getproperty(getfield(x, :data), name), getfield(x, :mask))
 end
 
 Base.IndexStyle(::Type{<: MaskedStructArray}) = IndexLinear()

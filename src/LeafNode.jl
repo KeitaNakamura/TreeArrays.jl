@@ -88,9 +88,9 @@ function StructLeafNode{T, N, p, Ttuple}() where {T, N, p, Ttuple}
 end
 
 Base.propertynames(x::StructLeafNode) = (:data, propertynames(x.data)...)
-function Base.getproperty(x::StructLeafNode{T, N, p}, name::Symbol) where {T, N, p}
+@inline function Base.getproperty(x::StructLeafNode{T, N, p}, name::Symbol) where {T, N, p}
     name == :data && return getfield(x, :data)
-    LeafNode{fieldtype(T, name), N, p}(getproperty(x.data, name))
+    LeafNode{fieldtype(T, name), N, p}(getproperty(getfield(x, :data), name))
 end
 
 macro StructLeafNode(ex)
