@@ -102,7 +102,7 @@ for f in (:continuousview, :spotview, :blockview, :blockaroundview)
             @boundscheck checkbounds(A, I)
             @inbounds $_f(size(A), gettreeview(A), Tuple(I)...)
         end
-        @inline function $f(A::PropertyArray, I::Union{Int, AbstractUnitRange, Colon}...)
+        @inline function $f(A::PropertyArray, I...)
             @boundscheck checkbounds(A, I...)
             @inbounds getproperty($f(A.parent, I...), A.name)
         end
