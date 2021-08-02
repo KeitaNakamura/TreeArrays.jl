@@ -5,6 +5,20 @@ struct ContinuousView{T, N, p, Tnode <: AbstractNode{<: Any, N}, Tblocks <: Abst
     blockoffset::NTuple{N, Int}
 end
 
+struct BlockLocalIndex{N}
+    globalindex::NTuple{N, Int}
+    blockindex::Int
+    localindex::Int
+end
+@inline function BlockLocalIndex(x::ContinuousView, I::Int...)
+    dims = TreeSize(parent(x))[end]
+    blockindex, localindex = block_local_index(dims, I...)
+    blocklinear = Base._sub2ind(size(x.blocks), (blockindex .- blockoffset(x))...)
+    locallinear = Base._sub2ind(dims, localindex...)
+    BlockLocalIndex(I, blocklinear, locallinear)
+end
+BlockLocalIndex(x::ContinuousView, I::CartesianIndex) = BlockLocalIndex(x, Tuple(I)...)
+
 Base.size(x::ContinuousView) = map(length, x.indices)
 Base.axes(x::ContinuousView) = Base.IdentityUnitRange.(x.indices)
 Base.parent(x::ContinuousView) = x.parent
@@ -23,29 +37,37 @@ end
 blockoffset(x::ContinuousView) = x.blockoffset
 
 for f in (:(Base.getindex), :isactive, :allocate!)
+    @eval @inline function $f(x::ContinuousView, I::BlockLocalIndex)
+        @_propagate_inbounds_meta
+        @inbounds begin
+            block = x.blocks[I.blockindex]
+            $f(block, I.localindex)
+        end
+    end
+end
+
+@inline function Base.setindex!(x::ContinuousView, v, I::BlockLocalIndex)
+    @_propagate_inbounds_meta
+    block = x.blocks[I.blockindex]
+    if isnull(block)
+        leaf = _setindex!_getleaf(TreeView(parent(x)), v, I.globalindex...)
+        x.blocks[I.blockindex] = leaf
+    else
+        block[I.localindex] = v
+    end
+    x
+end
+
+for f in (:(Base.getindex), :isactive, :allocate!)
     @eval @inline function $f(x::ContinuousView{<: Any, N}, I::Vararg{Int, N}) where {N}
         @boundscheck checkbounds(x, I...)
-        blockindex, localindex = block_local_index(x, I...)
-        @inbounds begin
-            block = x.blocks[blockindex]
-            $f(block, localindex)
-        end
+        @inbounds $f(x, BlockLocalIndex(x, I...))
     end
 end
 
 @inline function Base.setindex!(x::ContinuousView{<: Any, N}, v, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(x, I...)
-    blockindex, localindex = block_local_index(x, I...)
-    @inbounds begin
-        block = x.blocks[blockindex]
-        if isnull(block)
-            leaf = _setindex!_getleaf(TreeView(parent(x)), v, I...)
-            x.blocks[blockindex] = leaf
-        else
-            block[localindex] = v
-        end
-    end
-    x
+    @inbounds setindex!(x, v, BlockLocalIndex(x, I...))
 end
 
 function _continuousview(parentdims::Tuple, A::TreeView{<: Any, N}, I::Vararg{Union{Int, AbstractUnitRange, Colon}, N}) where {N}
@@ -105,15 +127,14 @@ function generateblocks(blockindices, A::TreeView)
     end
 end
 
-# linear
-@inline function block_index(x::ContinuousView, I::Int...)
-    dims = TreeSize(parent(x))[end]
-    Base._sub2ind(size(x.blocks), (block_index(dims, I...) .- blockoffset(x))...)
+@inline function Base.getindex(x::PropertyArray{<: Any, <: Any, name}, i::BlockLocalIndex) where {name}
+    @_propagate_inbounds_meta
+    getproperty(x.parent[i], name)
 end
-@inline function block_local_index(x::ContinuousView, I::Int...)
-    dims = TreeSize(parent(x))[end]
-    blockindex, localindex = block_local_index(dims, I...)
-    blocklinear = Base._sub2ind(size(x.blocks), (blockindex .- blockoffset(x))...)
-    locallinear = Base._sub2ind(dims, localindex...)
-    blocklinear, locallinear
+
+@inline function Base.setindex!(x::PropertyArray{<: Any, <: Any, name}, v, i::BlockLocalIndex) where {name}
+    @_propagate_inbounds_meta
+    allocated = allocate!(x.parent, i)
+    set!(allocated, name, v)
+    x
 end

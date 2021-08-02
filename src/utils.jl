@@ -1,8 +1,8 @@
 @inline nfill(v, n::Val) = ntuple(i -> v, n)
 
 # cartesian
-@inline block_index(child_dims::Tuple, I::Integer...) = @. div(I-1, child_dims) + 1
-@inline function block_local_index(child_dims::Tuple, I::Integer...)
+@inline block_index(child_dims::NTuple{N, Integer}, I::Vararg{Int, N}) where {N} = @. div(I-1, child_dims) + 1
+@inline function block_local_index(child_dims::NTuple{N, Integer}, I::Vararg{Int, N}) where {N}
     blockindex = block_index(child_dims, I...)
     localindex = @. I - (blockindex-1) * child_dims
     blockindex, localindex
