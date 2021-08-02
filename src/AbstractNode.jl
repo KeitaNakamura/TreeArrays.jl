@@ -121,19 +121,19 @@ end
 Base.show(io::IO, ::TreeSize{S}) where {S} = print(io, "TreeSize", S)
 
 
-struct Allocated{P, I}
+struct Activated{P, I}
     parent::P
     index::I
 end
-@inline set!(x::Allocated, v) = @inbounds x.parent[x.index] = v
-@inline set!(x::Allocated, name::Symbol, v) = @inbounds getproperty(x.parent, name)[x.index] = v
-@inline function allocate!(x::Allocated, i...)
+@inline set!(x::Activated, v) = @inbounds unsafe_setindex!(x.parent, v, x.index)
+@inline set!(x::Activated, name::Symbol, v) = @inbounds unsafe_setindex!(getproperty(x.parent, name), v, x.index)
+@inline function allocate!(x::Activated, i...)
     @_propagate_inbounds_meta
-    child = @inbounds x.parent[x.index]
+    child = @inbounds unsafe_getindex(x.parent, x.index)
     allocate!(child, i...)
 end
-@inline function Base.setindex!(x::Allocated, v, i...)
+@inline function Base.setindex!(x::Activated, v, i...)
     @_propagate_inbounds_meta
-    child = @inbounds x.parent[x.index]
+    child = @inbounds unsafe_getindex(x.parent, x.index)
     setindex!(child, v, i...)
 end

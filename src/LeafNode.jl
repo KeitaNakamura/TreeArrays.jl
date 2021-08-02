@@ -24,6 +24,7 @@ end
 @generated function allocate!(x::AbstractLeafNode{T}, i::Int) where {T}
     if T.mutable
         quote
+            @_inline_meta
             @boundscheck checkbounds(x, i)
             @inbounds begin
                 isactive(x, i) && return x[i]
@@ -34,13 +35,14 @@ end
                 end
                 x[i] = leaf
             end
-            Allocated(x, i)
+            Activated(x, i)
         end
     else
         quote
+            @_inline_meta
             @boundscheck checkbounds(x, i)
             @inbounds getmask(x)[i] = true
-            Allocated(x, i)
+            Activated(x, i)
         end
     end
 end

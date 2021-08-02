@@ -57,7 +57,7 @@ function allocate!(x::AbstractHashNode{T}, i::Int) where {T}
         end
         x[i] = childnode # activated in setindex!
     end
-    Allocated(x, i)
+    Activated(x, i)
 end
 
 isallocated(x::AbstractHashNode, i::Int) = haskey(x.data, i)

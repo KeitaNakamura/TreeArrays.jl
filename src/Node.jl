@@ -62,7 +62,7 @@ function allocate!(x::DenseNode{T}, i::Int) where {T}
         end
         x[i] = childnode # activated in setindex!
     end
-    Allocated(x, i)
+    Activated(x, i)
 end
 
 isallocated(x::DenseNode, i::Int) = unsafe_getindex(x, i) !== null(childtype(x))
