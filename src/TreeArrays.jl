@@ -22,8 +22,6 @@ export
     StructTreeArray,
     continuousview,
     spotview,
-    blockview,
-    blockaroundview,
     eachleaf!,
     nleaves
 
