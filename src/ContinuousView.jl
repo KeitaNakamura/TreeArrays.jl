@@ -2,6 +2,7 @@ struct ContinuousView{T, N, p, Tnode <: AbstractNode{<: Any, N}, Tblocks <: Abst
     parent::Tnode # needed for new node allocation
     blocks::Tblocks
     indices::Tindices
+    blockoffset::NTuple{N, Int}
 end
 
 Base.size(x::ContinuousView) = map(length, x.indices)
@@ -14,13 +15,12 @@ Base.propertynames(x::ContinuousView{<: Any, <: Any, <: Any, <: Any, <: Abstract
     name == :parent && return getfield(x, :parent)
     name == :blocks && return getfield(x, :blocks)
     name == :indices && return getfield(x, :indices)
+    name == :blockoffset && return getfield(x, :blockoffset)
     T = fieldtype(leafeltype(parent(x)), name)
     PropertyArray{T, N, name}(x)
 end
 
-function blockoffset(x::ContinuousView)
-    block_index(TreeSize(parent(x))[end], first.(x.indices)...) .- 1
-end
+blockoffset(x::ContinuousView) = x.blockoffset
 
 for f in (:(Base.getindex), :isactive, :allocate!)
     @eval @inline function $f(x::ContinuousView{<: Any, N}, I::Vararg{Int, N}) where {N}
@@ -52,9 +52,9 @@ function _continuousview(parentdims::Tuple, A::TreeView{<: Any, N}, I::Vararg{Un
     indices = to_indices(A, I)
     node = rootnode(A)
     dims = TreeSize(node)[end]
-    start = CartesianIndex(block_index(dims, first.(indices)...))
-    stop = CartesianIndex(block_index(dims, last.(indices)...))
-    ContinuousView(node, generateblocks(start:stop, A), indices)
+    start = block_index(dims, first.(indices)...)
+    stop = block_index(dims, last.(indices)...)
+    ContinuousView(node, generateblocks(CartesianIndex(start):CartesianIndex(stop), A), indices, start .- 1)
 end
 function _spotview(parentdims::Tuple, A::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
     node = rootnode(A)
