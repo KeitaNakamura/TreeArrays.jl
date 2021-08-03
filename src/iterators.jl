@@ -71,9 +71,9 @@ function eachleaf_threads!(f, node::Union{Node, HashNode, DynamicNode, DynamicHa
     end
 end
 
-############
-# TreeView #
-############
+######################
+# TreeView/TreeArray #
+######################
 
 function eachleaf!(f, A::TreeView)
     if length(A) > THREADS_THRESHOLD
@@ -95,4 +95,11 @@ function eachleaf!(f, A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, Co
         eachleaf!(f, rootnode(A), indices)
     end
     A
+end
+
+eachleaf!(f, A::TreeArray) = eachleaf!(f, A.tree)
+function eachleaf!(f, A::TreeArray, I...)
+    indices = to_indices(A, I)
+    @boundscheck checkbounds(A, indices...)
+    @inbounds eachleaf!(f, A.tree, indices...)
 end
