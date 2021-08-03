@@ -45,7 +45,7 @@ struct TreeArray{T, N, Tnode} <: AbstractTreeArray{T, N}
 end
 
 function TreeArray{T}(dims::NTuple{N, Int}) where {T, N}
-    TreeArray(DynamicHashNode{Node{LeafNode{T, N, 3}, N, 4}, N}, dims)
+    TreeArray(DynamicHashNode{Node{LeafNode{T, N, 3}, N, 3}, N}, dims)
 end
 
 struct StructTreeArray{T, N, Tnode} <: AbstractTreeArray{T, N}
@@ -59,7 +59,7 @@ struct StructTreeArray{T, N, Tnode} <: AbstractTreeArray{T, N}
 end
 
 function StructTreeArray{T}(dims::NTuple{N, Int}) where {T, N}
-    StructTreeArray(DynamicHashNode{Node{@StructLeafNode{T, N, 3}, N, 4}, N}, dims)
+    StructTreeArray(DynamicHashNode{Node{@StructLeafNode{T, N, 3}, N, 3}, N}, dims)
 end
 
 Base.propertynames(x::StructTreeArray{T}) where {T} = (:tree, :dims, fieldnames(T)...)
