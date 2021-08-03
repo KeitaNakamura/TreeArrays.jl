@@ -138,3 +138,8 @@ end
     set!(allocated, name, v)
     x
 end
+
+@inline function unsafe_getindex(x::PropertyArray{<: Any, <: Any, name}, i::BlockLocalIndex) where {name}
+    @_propagate_inbounds_meta
+    getproperty(unsafe_getindex(x.parent, i), name)
+end

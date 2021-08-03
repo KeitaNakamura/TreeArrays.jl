@@ -15,6 +15,11 @@ Base.IndexStyle(::Type{<: PropertyArray{<: Any, <: Any, <: Any, A}}) where {A} =
     @inbounds getproperty(x.parent[i...], name)
 end
 
+@inline function unsafe_getindex(x::PropertyArray{<: Any, <: Any, name}, i::Int...) where {name}
+    @boundscheck checkbounds(x, i...)
+    @inbounds getproperty(unsafe_getindex(x.parent, i...), name)
+end
+
 @inline function Base.setindex!(x::PropertyArray{<: Any, <: Any, name}, v, i::Int...) where {name}
     @boundscheck checkbounds(x, i...)
     @inbounds allocated = allocate!(x.parent, i...)
