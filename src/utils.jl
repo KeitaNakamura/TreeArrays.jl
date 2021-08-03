@@ -13,7 +13,25 @@ struct Power2 <: Integer
     n::Int
 end
 
-Base.show(io::IO, p::Power2) = print(io, "2^", p.n)
+function print_superscript(io::IO, i::Int)
+    i == 0 && return print(io, Char(0x02070))
+    i == 1 && return print(io, Char(0x000B9))
+    i == 2 && return print(io, Char(0x000B2))
+    i == 3 && return print(io, Char(0x000B3))
+    i == 4 && return print(io, Char(0x02074))
+    i == 5 && return print(io, Char(0x02075))
+    i == 6 && return print(io, Char(0x02076))
+    i == 7 && return print(io, Char(0x02077))
+    i == 8 && return print(io, Char(0x02078))
+    i == 9 && return print(io, Char(0x02079))
+    error()
+end
+function Base.show(io::IO, p::Power2)
+    print(io, "2")
+    for char in string(p.n)
+        print_superscript(io, parse(Int, char))
+    end
+end
 
 @inline Base.convert(::Type{T}, p::Power2) where {T <: Integer} = one(T) << unsigned(p.n)
 Base.promote_type(::Type{Power2}, ::Type{T}) where {T} = T
