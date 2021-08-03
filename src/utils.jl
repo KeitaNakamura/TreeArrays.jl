@@ -8,6 +8,61 @@
     blockindex, localindex
 end
 
+# getindex like function
+for f in (:unsafe_getindex, :isactive, :allocate!, :isallocated)
+    _f = Symbol(:_, f)
+    @eval begin
+        function $f(A::AbstractArray, I...)
+            @_propagate_inbounds_meta
+            Base.error_if_canonical_getindex(IndexStyle(A), A, I...)
+            $_f(IndexStyle(A), A, to_indices(A, I)...)
+        end
+        function $_f(::IndexLinear, A::AbstractArray, I::Int...)
+            @_inline_meta
+            @boundscheck checkbounds(A, I...) # generally _to_linear_index requires bounds checking
+            @inbounds $f(A, Base._to_linear_index(A, I...))
+        end
+        function $_f(::IndexCartesian, A::AbstractArray, I::Int)
+            @_inline_meta
+            @boundscheck checkbounds(A, I...) # generally _to_subscript_indices requires bounds checking
+            @inbounds $f(A, Base._to_subscript_indices(A, I...)...)
+        end
+        function $_f(::IndexCartesian, A::AbstractArray{T,N}, I::Vararg{Int, N}) where {T,N}
+            @_propagate_inbounds_meta
+            $f(A, I...)
+        end
+    end
+end
+
+# setindex! like function
+for f! in (:unsafe_setindex!,)
+    _f! = Symbol(:_, f!)
+    @eval begin
+        function $f!(x::AbstractArray, v, I...)
+            @_propagate_inbounds_meta
+            Base.error_if_canonical_setindex(IndexStyle(A), A, I...)
+            $_f!(IndexStyle(A), A, v, to_indices(A, I)...)
+        end
+        function $_f!(::IndexLinear, A::AbstractArray, v, I::Int...)
+            @_inline_meta
+            @boundscheck checkbounds(A, I...) # generally _to_linear_index requires bounds checking
+            @inbounds $f!(A, v, Base._to_linear_index(A, I...))
+            A
+        end
+        function $_f!(::IndexCartesian, A::AbstractArray, v, I::Int)
+            @_inline_meta
+            @boundscheck checkbounds(A, I...) # generally _to_subscript_indices requires bounds checking
+            @inbounds $f!(A, v, Base._to_subscript_indices(A, I...)...)
+            A
+        end
+        function $_f!(::IndexCartesian, A::AbstractArray{T,N}, v, I::Vararg{Int, N}) where {T,N}
+            @_propagate_inbounds_meta
+            $f!(A, v, I...)
+            A
+        end
+    end
+end
+
 
 struct Power2 <: Integer
     n::Int

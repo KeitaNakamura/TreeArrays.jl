@@ -1,13 +1,13 @@
 abstract type MaskedArray{T, N} <: AbstractArray{T, N} end
 
-@inline isactive(x::MaskedArray, i::Int...) = (@_propagate_inbounds_meta; getmask(x)[i...])
-@inline checkmask(::Type{Bool}, x::MaskedArray, i::Int...) = (@_propagate_inbounds_meta; getmask(x)[i...]) # checkbounds as well
-@inline checkmask(x::MaskedArray, i::Int...) = (@_propagate_inbounds_meta; checkmask(Bool, x, i...) || throw(UndefRefError()))
+@inline isactive(x::MaskedArray, i::Int) = (@_propagate_inbounds_meta; getmask(x)[i])
+@inline checkactive(::Type{Bool}, x::MaskedArray, i::Int) = (@_propagate_inbounds_meta; isactive(x, i)) # checkbounds as well
+@inline checkactive(x::MaskedArray, i::Int) = (@_propagate_inbounds_meta; checkactive(Bool, x, i) || throw(UndefRefError()))
 
 @inline function Base.getindex(x::MaskedArray, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds begin
-        checkmask(x, i)
+        checkactive(x, i)
         x.data[i]
     end
 end
@@ -134,7 +134,7 @@ end
 @inline function Base.getindex(x::MaskedHashArray, i::Int)
     @boundscheck checkbounds(x, i)
     @inbounds begin
-        checkmask(x, i)
+        checkactive(x, i)
         x.data[FastHashInt(i)]
     end
 end

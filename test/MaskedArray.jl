@@ -6,7 +6,7 @@
             @test size(x.mask) == (2, 3)
             @test any(x.mask) == false
 
-            # getindex, checkmask
+            # getindex, checkactive
             @test_throws Exception x[i]
 
             # setindex

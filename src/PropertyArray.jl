@@ -22,7 +22,7 @@ end
     x
 end
 
-@inline function isactive(x::PropertyArray, i...)
+@inline function isactive(x::PropertyArray, i::Int...)
     @boundscheck checkbounds(x, i...)
     @inbounds isactive(x.parent, i...)
 end

@@ -19,19 +19,9 @@ end
 end
 
 for f in (:isactive, :allocate!, :isallocated)
-    @eval begin
-        @inline function $f(x::AbstractTreeArray{<: Any, N}, I::Vararg{Int, N}) where {N}
-            @boundscheck checkbounds(x, I...)
-            @inbounds $f(x.tree, I...)
-        end
-        @inline function $f(x::AbstractTreeArray{<: Any, N}, I::CartesianIndex{N}) where {N}
-            @boundscheck checkbounds(x, I)
-            @inbounds $f(x, Tuple(I)...)
-        end
-        @inline function $f(x::AbstractTreeArray, i::Int)
-            @boundscheck checkbounds(x, i)
-            @inbounds $f(x, Base._ind2sub(size(x), i)...)
-        end
+    @eval @inline function $f(x::AbstractTreeArray{<: Any, N}, I::Vararg{Int, N}) where {N}
+        @boundscheck checkbounds(x, I...)
+        @inbounds $f(x.tree, I...)
     end
 end
 

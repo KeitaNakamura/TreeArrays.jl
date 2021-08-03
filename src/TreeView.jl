@@ -30,13 +30,10 @@ end
 end
 
 for f in (:isactive, :allocate!, :isallocated)
-    @eval begin
-        @inline function $f(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
-            @boundscheck checkbounds(x, I...)
-            index = TreeLinearIndex(x, I...)
-            @inbounds $f(x, index)
-        end
-        @inline $f(x::TreeView, I::CartesianIndex) = (@_propagate_inbounds_meta; $f(x, Tuple(I)...))
+    @eval @inline function $f(x::TreeView{<: Any, N}, I::Vararg{Int, N}) where {N}
+        @boundscheck checkbounds(x, I...)
+        index = TreeLinearIndex(x, I...)
+        @inbounds $f(x, index)
     end
 end
 
