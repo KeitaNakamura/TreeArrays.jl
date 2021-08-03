@@ -2,7 +2,7 @@
 # LeafNode #
 ############
 
-function eachleaf!(f, node::LeafNode)
+function eachleaf!(f, node::AbstractLeafNode)
     @inbounds @simd for i in eachindex(node)
         if isactive(node, i)
             unsafe_setindex!(node, f(unsafe_getindex(node, i)), i)
@@ -10,7 +10,7 @@ function eachleaf!(f, node::LeafNode)
     end
 end
 
-@inline function eachleaf!(f, node::LeafNode, indices::CartesianIndices)
+@inline function eachleaf!(f, node::AbstractLeafNode, indices::CartesianIndices)
     @boundscheck checkbounds(node, indices)
     @inbounds @simd for cartesian in indices
         I = Tuple(cartesian)
@@ -71,9 +71,9 @@ function eachleaf_threads!(f, node::Union{Node, HashNode, DynamicNode, DynamicHa
     end
 end
 
-######################
-# TreeView/TreeArray #
-######################
+##############################
+# TreeView/AbstractTreeArray #
+##############################
 
 function eachleaf!(f, A::TreeView)
     if length(A) > THREADS_THRESHOLD
@@ -97,9 +97,10 @@ function eachleaf!(f, A::TreeView{<: Any, N}, I::Vararg{Union{Int, UnitRange, Co
     A
 end
 
-eachleaf!(f, A::TreeArray) = eachleaf!(f, A.tree)
-function eachleaf!(f, A::TreeArray, I...)
+eachleaf!(f, A::AbstractTreeArray) = (eachleaf!(f, A.tree); A)
+function eachleaf!(f, A::AbstractTreeArray, I...)
     indices = to_indices(A, I)
     @boundscheck checkbounds(A, indices...)
     @inbounds eachleaf!(f, A.tree, indices...)
+    A
 end
