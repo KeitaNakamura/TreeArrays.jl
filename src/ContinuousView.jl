@@ -36,7 +36,7 @@ end
 
 blockoffset(x::ContinuousView) = x.blockoffset
 
-for f in (:(Base.getindex), :isactive, :allocate!)
+for f in (:(Base.getindex), :isactive, :allocate!, :unsafe_getindex)
     @eval @inline function $f(x::ContinuousView, I::BlockLocalIndex)
         @_propagate_inbounds_meta
         @inbounds begin
@@ -58,7 +58,7 @@ end
     x
 end
 
-for f in (:(Base.getindex), :isactive, :allocate!)
+for f in (:(Base.getindex), :isactive, :allocate!, :unsafe_getindex)
     @eval @inline function $f(x::ContinuousView{<: Any, N}, I::Vararg{Int, N}) where {N}
         @boundscheck checkbounds(x, I...)
         @inbounds $f(x, BlockLocalIndex(x, I...))
