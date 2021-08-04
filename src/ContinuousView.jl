@@ -7,15 +7,13 @@ end
 
 struct BlockLocalIndex{N}
     globalindex::NTuple{N, Int}
-    blockindex::Int
+    blockindex::CartesianIndex{N}
     localindex::Int
 end
 @inline function BlockLocalIndex(x::ContinuousView, I::Int...)
     dims = TreeSize(parent(x))[end]
     blockindex, localindex = block_local_index(dims, I...)
-    blocklinear = Base._sub2ind(size(x.blocks), (blockindex .- blockoffset(x))...)
-    locallinear = Base._sub2ind(dims, localindex...)
-    BlockLocalIndex(I, blocklinear, locallinear)
+    BlockLocalIndex(I, CartesianIndex(blockindex .- blockoffset(x)), Base._sub2ind(dims, localindex...))
 end
 BlockLocalIndex(x::ContinuousView, I::CartesianIndex) = BlockLocalIndex(x, Tuple(I)...)
 
