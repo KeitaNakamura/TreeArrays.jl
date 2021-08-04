@@ -4,9 +4,9 @@
 end
 
 @testset "Power2" begin
-    @test @inferred(TreeArrays.Power2(0)) == 2^0
-    @test @inferred(TreeArrays.Power2(1)) == 2^1
-    @test @inferred(TreeArrays.Power2(2)) == 2^2
+    @test TreeArrays.Power2(0) == 2^0
+    @test TreeArrays.Power2(1) == 2^1
+    @test TreeArrays.Power2(2) == 2^2
 
     x = TreeArrays.Power2(3)
     x′ = 2^3

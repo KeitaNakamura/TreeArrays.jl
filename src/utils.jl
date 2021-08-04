@@ -64,9 +64,13 @@ for f! in (:unsafe_setindex!,)
 end
 
 
-struct Power2 <: Integer
-    n::Int
+struct Power2{n} <: Integer
+    function Power2{n}() where {n}
+        new{n::UInt}()
+    end
 end
+@pure Power2(n::Int) = (@assert n ≥ 0; Power2{unsigned(n)}())
+@pure Power2(n::UInt) = Power2{n}()
 
 function print_superscript(io::IO, i::Int)
     i == 0 && return print(io, Char(0x02070))
@@ -81,23 +85,23 @@ function print_superscript(io::IO, i::Int)
     i == 9 && return print(io, Char(0x02079))
     error()
 end
-function Base.show(io::IO, p::Power2)
+function Base.show(io::IO, p::Power2{n}) where {n}
     print(io, "2")
-    for char in string(p.n)
+    for char in string(n)
         print_superscript(io, parse(Int, char))
     end
 end
 
-@inline Base.convert(::Type{T}, p::Power2) where {T <: Integer} = one(T) << unsigned(p.n)
-Base.promote_type(::Type{Power2}, ::Type{T}) where {T} = T
-Base.promote_type(::Type{T}, ::Type{Power2}) where {T} = T
+@inline Base.convert(::Type{T}, p::Power2{n}) where {T <: Integer, n} = one(T) << n
+Base.promote_type(::Type{<: Power2}, ::Type{T}) where {T} = T
+Base.promote_type(::Type{T}, ::Type{<: Power2}) where {T} = T
 
-@inline Base.:*(a::Integer, p::Power2) = a << unsigned(p.n)
-@inline Base.:*(p::Power2, a::Integer) = a << unsigned(p.n)
-@inline Base.:*(p::Power2, q::Power2) = Power2(p.n + q.n)
+@inline Base.:*(a::Integer, p::Power2{n}) where {n} = a << n
+@inline Base.:*(p::Power2{n}, a::Integer) where {n} = a << n
+@inline Base.:*(p::Power2{m}, q::Power2{n}) where {m, n} = Power2(m + n)
 
-@inline Base.div(a::Integer, p::Power2) = a >> unsigned(p.n)
-@inline Base.rem(a::Integer, p::Power2) = a & (one(a) << unsigned(p.n) - 1)
+@inline Base.div(a::Integer, p::Power2{n}) where {n} = a >> n
+@inline Base.rem(a::Integer, p::Power2{n}) where {n} = a & (one(a) << n - 1)
 @inline Base.divrem(a::Integer, p::Power2) = (div(a, p), rem(a, p))
 
 @inline Base.zero(::Power2) = Power2(0)
